@@ -1,25 +1,26 @@
 import tkinter as tk
 import data
+
 import math
 from polycoin import PolyCoin
 from circlecoin import CircleCoin
 from rectcoin import RectCoin
+from metallurgy import Metallurgy
 
 S = data.DE
 
 class MainScreen(tk.Frame):
     def __init__(self, screen):
-
         super().__init__(screen)
+
+        self.menu = tk.Menu(screen)
+        screen.config(menu=self.menu)
+        self.build_menu()
 
         # place to keep tk variables
         self.vars = {}
         self.widgets = {}
         self.coin = None
-        self.alloy = {k: 0 for k in data.Metals.DATA}
-
-        self.alloy_value = 0
-        self.alloy_density = 0
 
         self.canvas = tk.Canvas(self)
         self.canvas.config(width=400, height=400)
@@ -37,10 +38,16 @@ class MainScreen(tk.Frame):
         self.result_frame.pack(side=tk.BOTTOM)
         self.center_frame.pack(side=tk.LEFT)
 
-        self.metallurgy = tk.Frame(self)
-        self.smelting_pot = tk.LabelFrame(self.metallurgy, text=S.MELTING_POT)
-        self.build_metallurgy_lab()
+        self.metallurgy = Metallurgy(self)
         self.metallurgy.pack(side=tk.LEFT)
+
+    def build_menu(self):
+        filemenu = tk.Menu(self.menu, tearoff=0)
+        filemenu.add_command(label="Open", command=lambda: print("Open"))
+        filemenu.add_command(label="Save", command=lambda: print("Save"))
+        filemenu.add_separator()
+        filemenu.add_command(label="Exit", command=self.master.quit)
+        self.menu.add_cascade(label="File", menu=filemenu)
 
     def build_shape_selector(self):
         """ add the selector for the basic coin shape """
@@ -102,7 +109,7 @@ class MainScreen(tk.Frame):
                 "chamfer",
                 "thickness"
             ]
-            dim_unit = ["mm", "mm", "%", "mm"]
+            dim_unit = ["", "mm", "%", "mm"]
 
         # creating the tk.StringVars to store and trace the data
         labels = []
@@ -202,163 +209,3 @@ class MainScreen(tk.Frame):
         tk.Label(frame, text=weight).pack()
         tk.Label(frame, text=value).pack()
 
-
-    def build_metallurgy_lab(self):
-        """ build the metallurgy lab frame """
-
-        frame = self.metallurgy
-        self.widgets["metal_absolute"] = {}
-        self.widgets["metal_relative"] = {}
-        self.widgets["metal_names"] = {}
-        self.widgets["metal_filter"] = {}
-        w_abs = self.widgets["metal_absolute"]
-        w_rel = self.widgets["metal_relative"]
-        w_name = self.widgets["metal_names"]
-
-        selector = tk.LabelFrame(frame, text=S.METAL_GROUPS)
-        for i in range(4):
-            w = self.widgets["metal_filter"][i] = tk.Checkbutton(selector)
-            var = tk.IntVar()
-            var.set(1)
-            var.trace("w", self.filter)
-            w.config(text=S.METAL_SELECTION[i], variable=var)
-            w.var = var
-            w.pack(anchor=tk.W)
-        selector.pack(fill=tk.X, expand=1)
-
-        sorter = tk.LabelFrame(frame, text=S.METAL_SORT)
-        criteria = ["name", "value", "amount", "density"]
-        for c in criteria:
-            button = tk.Button(
-                sorter,
-                text=S.METAL_SORTER[c],
-                command=lambda e=c: self.filter(e)
-            )
-            button.pack(side=tk.LEFT)
-        sorter.pack()
-
-        for i, m in enumerate(data.Metals.DATA):
-
-            w_name[m] = tk.Label(self.smelting_pot, text=S.METALS[m], anchor=tk.W)
-            w_name[m].grid(row=i, column=0, sticky=tk.W)
-            w_abs[m] = tk.Entry(self.smelting_pot,width=5)
-            w_abs[m].bind("<Key>", lambda e, m=m: self.smelt(e, m))
-            w_abs[m].insert(0, "0")
-            w_abs[m].grid(row=i, column=1)
-            w_rel[m] = tk.Label(self.smelting_pot, text="0.00%", width=7, anchor=tk.E)
-            w_rel[m].grid(row=i, column=2)
-
-        self.smelting_pot.pack(side=tk.TOP, fill=tk.X)
-
-    def smelt(self, event, metal):
-        """ smelt your metals to create an alloy
-            args:
-                metal(string): symbol of element changed
-        """
-
-        # check the value and update the alloy dict
-        value = event.widget.get()
-        if "," in value: value.replace(",", ".")
-        try:
-            value = float(value)
-        except ValueError:
-            event.widget.config(background="#f00")
-            return
-
-        # no negative values!
-        if value < 0:
-            event.widget.config(background="#f00")
-            return
-
-        event.widget.config(background="#fff")
-
-        self.alloy[metal] = value
-
-        # if a metal is used in an alloy, it's group must be displayed!
-        for k, v in data.Metals.SELECTOR.items():
-            if metal in v:
-                total = sum([a for name, a in self.alloy.items() if name in v])
-                selector = self.widgets["metal_filter"][k]
-                if total: selector.config(state=tk.DISABLED)
-                else: selector.config(state=tk.NORMAL)
-
-        # calculating the absolute sum
-        amount = sum(self.alloy.values())
-        volume = 0
-        price = 0
-
-        # calculate mass percentage
-        for name, value in self.alloy.items():
-            try:
-                percentage = 100 * value / amount
-            except ZeroDivisionError:
-                percentage = 0.0
-
-            # updating the text
-            percentage = str(round(percentage, 2)) + " %"
-            self.widgets["metal_relative"][name].config(text=percentage)
-
-            # adding to price
-            price += value / 1000 * data.Metals.DATA[name][2]
-            volume += value / data.Metals.DATA[name][1]
-
-        try:
-            density = amount / volume
-            value = price / amount
-        except ZeroDivisionError:
-            density = 0
-            value = 0
-
-        self.alloy_density = density
-        self.alloy_value = value
-
-        self.update_coin_data()
-
-
-    def filter(self, n=None, e=None, m=None):
-        """ filter and sort the metals in the smelting pot """
-
-        if n: print(n)
-
-        # filter based on the selector
-        selection = []
-        for i in range(4):
-            if self.widgets["metal_filter"][i].var.get() == 1:
-                selection += data.Metals.SELECTOR[i]
-
-        selection = [x for x in selection]
-        metal_data = data.Metals.DATA.items()
-
-        l = [(m, S.METALS[m]) for m in selection]
-        l = sorted(l, key=lambda d: d[1])
-
-        if n == "name":
-            l = [(m, S.METALS[m]) for m in selection]
-            l = sorted(l, key=lambda d: d[1])
-
-        elif n == "density":
-            l = [(s, d[1]) for s, d in metal_data if s in selection]
-            l = sorted(l, key=lambda d: d[1], reverse=True)
-
-        elif n == "amount":
-            l = [(m, self.alloy[m]) for m in selection]
-            l = sorted(l, key=lambda d: d[1], reverse=True)
-
-        elif n == "value":
-            l = [(s, d[2]) for s, d in metal_data if s in selection]
-            l = sorted(l, key=lambda d: d[1], reverse=True)
-
-
-        w_abs = self.widgets["metal_absolute"]
-        w_rel = self.widgets["metal_relative"]
-        w_name = self.widgets["metal_names"]
-
-        # remove visibility for all entries
-        for w in w_abs.values(): w.grid_forget()
-        for w in w_rel.values(): w.grid_forget()
-        for w in w_name.values(): w.grid_forget()
-
-        for i, v in enumerate(l):
-            w_name[v[0]].grid(row=i, column=0, sticky=tk.W)
-            w_abs[v[0]].grid(row=i, column=1)
-            w_rel[v[0]].grid(row=i, column=2)
