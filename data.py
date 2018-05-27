@@ -69,6 +69,18 @@ class DE(object):
         "density": "Dichte"
     }
 
+    MENU_FILE = "Datei"
+    MENU_OPEN = "Öffnen ..."
+    MENU_SAVE = "Speichern ..."
+    MENU_EXIT = "Beenden"
+
+    MENU_TOOLS = "Werkzeuge"
+    MENU_ABOUT = "About ..."
+
+    MENU_COIN_DESIGNER = "Münzdesigner"
+    MENU_COIN_GENERATOR = "Münzgenerator"
+    MENU_METALLURGY = "Legierung schmelzen"
+
     METAL_GROUPS = "Metalle eingrenzen: "
     METAL_SORT = "Sortierung: "
     MELTING_POT = "Schmelztigel"

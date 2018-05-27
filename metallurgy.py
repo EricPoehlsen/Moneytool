@@ -19,11 +19,11 @@ class Metallurgy(tk.Frame):
 
         self.left_column = tk.Label(self)
         self.build_selector()
-        self.left_column.pack(side=tk.LEFT)
+        self.left_column.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
         self.smelting_pot = tk.LabelFrame(self, text=S.MELTING_POT)
         self.build_smelting_pot()
-        self.smelting_pot.pack(side=tk.LEFT, fill=tk.X)
+        self.smelting_pot.pack(side=tk.LEFT, fill=tk.BOTH, expand=1)
 
     def build_selector(self):
 
@@ -78,6 +78,8 @@ class Metallurgy(tk.Frame):
         value = self.widgets["metal_relative"]
         name = self.widgets["metal_names"]
 
+        self.smelting_pot.columnconfigure(1, weight=1)
+
         for i, m in enumerate(data.Metals.DATA):
 
             name[m] = tk.Label(self.smelting_pot, text=S.METALS[m], anchor=tk.W)
@@ -90,12 +92,9 @@ class Metallurgy(tk.Frame):
                 resolution = 0.001,
                 orient=tk.HORIZONTAL
             )
-            #if m == "Au":
-            #    sliders[m].set(1)
-            #    self.alloy[m] = 1
             sliders[m].bind("<B1-Motion>", lambda e, m=m: self.update_slider(e, m))
             sliders[m].bind("<ButtonRelease-1>", lambda e, m=m: self.force_update(e, m))
-            sliders[m].grid(row=i, column=1)
+            sliders[m].grid(row=i, column=1, sticky=tk.EW)
             text = str(round(self.alloy[m]*100, 2)) + " %"
             value[m] = tk.Label(self.smelting_pot, text=text, width=7, anchor=tk.E)
             value[m].grid(row=i, column=2)
