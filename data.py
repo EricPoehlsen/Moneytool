@@ -81,6 +81,8 @@ class DE(object):
     MENU_COIN_GENERATOR = "Münzgenerator"
     MENU_METALLURGY = "Legierung schmelzen"
 
+    GENERATE_COINS = "Münzen erzeugen ..."
+
     METAL_GROUPS = "Metalle eingrenzen: "
     METAL_SORT = "Sortierung: "
     MELTING_POT = "Schmelztigel"

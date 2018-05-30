@@ -8,12 +8,16 @@ from coindesigner import CoinDesigner
 S = data.DE
 
 class MainScreen(tk.Frame):
+    """ The primary program class - holding some global stuff """
+
     def __init__(self, screen):
         super().__init__(screen)
 
         self.menu = tk.Menu(screen)
         screen.config(menu=self.menu)
         self.build_menu()
+
+        self.loaded_alloys = {}
 
     def build_menu(self):
         """ construction the menu ... """
