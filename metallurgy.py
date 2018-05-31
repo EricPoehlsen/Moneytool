@@ -254,3 +254,21 @@ class Metallurgy(tk.Frame):
 
         tree = et.ElementTree(alloy)
         tree.write(file_name, xml_declaration=True, pretty_print=True, encoding='UTF-8')
+
+
+class MetallurgyWindow(tk.Toplevel):
+    def __init__(self, master, alloy=None):
+        super().__init__(master)
+        self.alloy = alloy
+
+        self.main_frame = Metallurgy(self)
+        self.main_frame.pack()
+        frame = tk.Frame(self)
+        update_button = tk.Button(frame, text="Update")
+        update_button.pack(side=tk.LEFT)
+        cancel_button = tk.Button(frame, text="Abbrechen")
+        cancel_button.pack(side=tk.LEFT)
+        remove_button = tk.Button(frame, text="Entfernen")
+        remove_button.pack(side=tk.LEFT)
+        frame.pack()
+

@@ -5,7 +5,6 @@ from polycoin import PolyCoin
 from circlecoin import CircleCoin
 from rectcoin import RectCoin
 from metallurgy import Metallurgy
-from coingenerator import CoinGenerator
 
 S = data.DE
 
@@ -17,18 +16,18 @@ class CoinDesigner(tk.Frame):
         self.vars = {}
         self.widgets = {}
         self.coin = None
-
         self.canvas = tk.Canvas(self)
         self.canvas.config(width=400, height=400)
-        self.canvas.pack(side=tk.LEFT)
 
         self.shape_container = tk.LabelFrame(self, text="Form festlegen")
         self.shape_selector = tk.Frame(self.shape_container)
-        self.shape_selector.pack(side=tk.TOP, expand=1, fill=tk.X)
+        self.shape_selector.pack(side=tk.TOP, fill=tk.X)
         self.shape_entry = tk.Frame(self.shape_container)
-        self.shape_entry.pack(side=tk.BOTTOM)
+        self.shape_entry.pack(side=tk.TOP)
         self.build_shape_selector()
-        self.shape_container.pack(side=tk.LEFT)
+        self.shape_container.pack(side=tk.LEFT, fill=tk.Y, expand=1)
+
+        self.canvas.pack(side=tk.LEFT)
 
     def build_shape_selector(self):
         """ add the selector for the basic coin shape """
@@ -41,7 +40,8 @@ class CoinDesigner(tk.Frame):
 
         shape.set(shapes[0])
         selector = tk.OptionMenu(frame, shape, *shapes)
-        selector.pack(expand=1)
+        selector.config(width=20)
+        selector.pack(fill=tk.X, expand=1)
 
     def update_shape_entry(self, n=None, e=None, m=None):
         """ construct the coin entry fields, when the primary shape is selected """
@@ -163,3 +163,22 @@ class CoinDesigner(tk.Frame):
             self.coin.draw(self.canvas)
             print("Area: ", self.coin.area, " | Volume: ", self.coin.volume)
 
+class CoinDesignerWindow(tk.Toplevel):
+    def __init__(self, master, number):
+        print(number)
+        super().__init__(master)
+
+        self.shape_selector = CoinDesigner(self)
+        self.shape_selector.pack()
+
+        self.number = number
+
+    def destroy(self):
+        coin = self.shape_selector.coin
+        coins = self.master.coins
+        coins[self.number]["shape"] = coin
+        button = coins[self.number]["widgets"][0]
+        button.config(text=str(coin))
+
+        print(self.number)
+        super().destroy()
