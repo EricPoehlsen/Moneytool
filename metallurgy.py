@@ -257,9 +257,9 @@ class Metallurgy(tk.Frame):
 
 
 class MetallurgyWindow(tk.Toplevel):
-    def __init__(self, master, alloy=None):
+    def __init__(self, master, number):
         super().__init__(master)
-        self.alloy = alloy
+        self.number = number
 
         self.main_frame = Metallurgy(self)
         self.main_frame.pack()
@@ -272,3 +272,22 @@ class MetallurgyWindow(tk.Toplevel):
         remove_button.pack(side=tk.LEFT)
         frame.pack()
 
+    def destroy(self):
+        alloy = {k: v for k, v in self.main_frame.alloy.items() if v}
+        coins = self.master.coins
+        coins[self.number]["alloy"] = alloy
+
+        short_alloy = [(v, k) for k, v in alloy.items() if v]
+        short_alloy = sorted(short_alloy, reverse=True)
+
+        text = ""
+        for entry in short_alloy:
+            v, k = entry
+            text += k + ": " + str(round(v * 100, 2)) + "% - "
+
+        if text: text = text[:-3]
+        button = coins[self.number]["widgets"][2]
+        button.config(text=text)
+
+
+        super().destroy()
