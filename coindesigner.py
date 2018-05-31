@@ -179,6 +179,4 @@ class CoinDesignerWindow(tk.Toplevel):
         coins[self.number]["shape"] = coin
         button = coins[self.number]["widgets"][0]
         button.config(text=str(coin))
-
-        print(self.number)
         super().destroy()

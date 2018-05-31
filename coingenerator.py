@@ -36,6 +36,9 @@ class CoinGenerator(tk.Frame):
         form.pack(side=tk.LEFT)
 
         value = tk.Entry(coin)
+        value.var = tk.StringVar()
+        value.var.trace("w", lambda n, e, m, i=i: self.update_value(i))
+        value.config(textvariable=value.var)
         value.pack(side=tk.LEFT)
         alloy = tk.Button(coin, text="Legierung", command=lambda i=i: self.select_alloy(i))
         alloy.pack(side=tk.LEFT)
@@ -49,37 +52,97 @@ class CoinGenerator(tk.Frame):
             shape = coin.get("shape")
             alloy = coin.get("alloy")
             value = coin.get("value")
-
-            if shape and alloy:
-                self.calculate_value(shape, alloy)
-
-            if shape and value:
-                self.calculate_alloy(shape, value)
+            print(value)
 
             if value and alloy:
                 self.calculate_shape(value, alloy)
+                continue
 
-            if not coin.get("shape"):
-                coin["shape"] = self.random_shape()
+            if not shape:
+                # generate random shape
+                shape = coin["shape"] = self.random_shape()
 
+                # update text ...
                 shape_button = widgets[0]
-                shape_button.config(text=str(coin["shape"]))
+                shape_button.config(text=str(shape))
 
-            if not coin.get("alloy"):
-                coin["alloy"] = self.random_alloy()
+            if shape and value:
+                "GENERATE ::: "
+                self.calculate_alloy(shape, value)
+                continue
+
+            if not alloy:
+                # generate random alloy
+                alloy = coin["alloy"] = self.random_alloy()
+
+                # update text ...
+                text = ""
+                alloy_list = [(v, k) for k, v in alloy.items()]
+                alloy_list = sorted(alloy_list, reverse=True)
+                for entry in alloy_list:
+                    v, k = entry
+                    text += k + ": " + str(round(v * 100, 2)) + "% - "
+
+                if text: text = text[:-3]
+                button = widgets[2]
+                button.config(text=text)
+
+            if shape and alloy:
+                value = self.calculate_value(shape, alloy)
+                text = str(round(value, 2)) + "$"
+                entry = widgets[1]
+                entry.delete(0, tk.END)
+                entry.insert(0, text)
 
     def calculate_value(self, shape, alloy):
         """ Calculate the value of a coin given shape and alloy
             shape (Coin): shape information for a coin
+            alloy (dict): an alloy dictionary
 
         """
-        pass
+
+        volume = 0
+        price = 0
+
+        # calculate mass percentage
+        for name, value in alloy.items():
+
+            # adding to price
+            price += value / 1000 * data.Metals.DATA[name][2]
+            volume += value / data.Metals.DATA[name][1]
+
+        try:
+            density = 1 / volume
+            value = price
+        except ZeroDivisionError:
+            density = 0
+            value = 0
+
+        coin_volume = shape.volume / 1000
+        coin_mass = coin_volume * density
+        coin_value = coin_mass * value
+
+        return coin_value
 
     def calculate_shape(self, value, alloy):
         pass
 
     def calculate_alloy(self, shape, value):
-        pass
+        """ create an alloy based on a target coin value and shape """
+
+        metals = {name: [] for name in data.Metals.DATA}
+
+        # value of coin at 100 vol%
+        volume = shape.volume / 1000
+        for metal in metals:
+            density = data.Metals.DATA[metal][1]
+            value = data.Metals.DATA[metal][2]
+
+            mass = volume * density
+            price = mass * value
+            metals[metal].append(price)
+        print(metals)
+
 
     def random_shape(self):
         """ generate a random coin based on some constraints ... """
@@ -174,9 +237,20 @@ class CoinGenerator(tk.Frame):
             number (int): numeric list entry from the current coin list ...
         """
 
-        print(number)
-        a = MetallurgyWindow(self)
+        a = MetallurgyWindow(self, number)
 
     def select_shape(self, number):
         a = CoinDesignerWindow(self, number)
+
+    def update_value(self, number):
+        widget = self.coins[number]["widgets"][1]
+        var = widget.var
+        value = var.get()
+
+        try:
+            value = float(value)
+        except ValueError:
+            return
+
+        self.coins[number]["value"] = value
 
