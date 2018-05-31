@@ -1,5 +1,8 @@
 import tkinter as tk
 import random
+from metallurgy import MetallurgyWindow
+from coindesigner import CoinDesignerWindow
+
 from rectcoin import RectCoin
 from circlecoin import CircleCoin
 from polycoin import PolyCoin
@@ -13,7 +16,6 @@ class CoinGenerator(tk.Frame):
     def __init__(self, screen):
 
         super().__init__(screen)
-
         self.coins = []
         self.widgets = {}
         frame = tk.Frame(self)
@@ -24,37 +26,60 @@ class CoinGenerator(tk.Frame):
         frame.pack(fill=tk.X, expand=1, anchor=tk.N)
 
     def add_coin(self):
-        if not self.widgets.get("coins"):
-            self.widgets["coins"] = []
+        self.coins.append([])
 
-        coins = self.widgets["coins"]
-        self.coins.append({})
+        i = len(self.coins) - 1
 
         coin = tk.Frame(self)
-        form = tk.Button(coin, text="Form")
+        form = tk.Button(coin, text="Form", command=lambda i=i: self.select_shape(i))
+        form.config(width=20)
         form.pack(side=tk.LEFT)
+
         value = tk.Entry(coin)
         value.pack(side=tk.LEFT)
-        alloy = tk.Button(coin, text="Legierung")
+        alloy = tk.Button(coin, text="Legierung", command=lambda i=i: self.select_alloy(i))
         alloy.pack(side=tk.LEFT)
         coin.pack(side=tk.TOP)
-        coins.append((form, value, alloy))
+        widgets = (form, value, alloy)
+        self.coins[i] = {"widgets": widgets}
 
     def generate(self):
-        for i, coin in enumerate(self.coins):
-            widgets = self.widgets["coins"][i]
+        for coin in self.coins:
+            widgets = coin.get("widgets")
+            shape = coin.get("shape")
+            alloy = coin.get("alloy")
+            value = coin.get("value")
+
+            if shape and alloy:
+                self.calculate_value(shape, alloy)
+
+            if shape and value:
+                self.calculate_alloy(shape, value)
+
+            if value and alloy:
+                self.calculate_shape(value, alloy)
 
             if not coin.get("shape"):
                 coin["shape"] = self.random_shape()
 
-                if type(coin["shape"]) == RectCoin: new_shape=S.SHAPES["rect"]
-                elif type(coin["shape"]) == CircleCoin: new_shape=S.SHAPES["circle"]
-                else: new_shape=S.SHAPES["poly"]
                 shape_button = widgets[0]
-                shape_button.config(text=new_shape)
+                shape_button.config(text=str(coin["shape"]))
 
-                print(self.random_alloy())
-        print(self.coins)
+            if not coin.get("alloy"):
+                coin["alloy"] = self.random_alloy()
+
+    def calculate_value(self, shape, alloy):
+        """ Calculate the value of a coin given shape and alloy
+            shape (Coin): shape information for a coin
+
+        """
+        pass
+
+    def calculate_shape(self, value, alloy):
+        pass
+
+    def calculate_alloy(self, shape, value):
+        pass
 
     def random_shape(self):
         """ generate a random coin based on some constraints ... """
@@ -99,7 +124,6 @@ class CoinGenerator(tk.Frame):
         coin.calculate_shape()
         return coin
 
-
     def random_alloy(self):
         """ generating a mostly random alloy using some constraints"""
 
@@ -143,3 +167,16 @@ class CoinGenerator(tk.Frame):
             else: alloy[metal] = amount
 
         return alloy
+
+    def select_alloy(self, number):
+        """ Display the metallurgy window for a given coin
+        Args:
+            number (int): numeric list entry from the current coin list ...
+        """
+
+        print(number)
+        a = MetallurgyWindow(self)
+
+    def select_shape(self, number):
+        a = CoinDesignerWindow(self, number)
+

@@ -16,7 +16,7 @@ class MainScreen(tk.Frame):
         self.menu = tk.Menu(screen)
         screen.config(menu=self.menu)
         self.build_menu()
-
+        self.switch_module(CoinGenerator)
         self.loaded_alloys = {}
 
     def build_menu(self):
@@ -45,7 +45,6 @@ class MainScreen(tk.Frame):
         )
 
         self.menu.add_cascade(label=S.MENU_TOOLS, menu=toolmenu)
-
         self.menu.add_command(label=S.MENU_ABOUT, command=lambda: print("Eric Pöhlsen"))
 
     def switch_module(self, module):
