@@ -1,14 +1,25 @@
+import data
+from coin import Coin
 from math import pi, sin, cos, sqrt
 
-class RectCoin(object):
+S = data.DE
+
+class RectCoin(Coin):
     def __init__(self, length, width, thickness, corner_radius=0.0):
+        """ manages a rectangular coin
+        Args:
+            length (float): length of rectangle in mm [> 0.0]
+            width (float): width of rectangle in mm [> 0.0]
+            thickness(float): coin thickness in mm [> 0.0]
+            corner_radius(float): rounded corners radius in mm [>= 0.0]
+        """
+
+        super().__init__()
         self.length = length
         self.width = width
         self.thickness = thickness
         self.corner_radius = corner_radius
         self.points = []
-        self.area = 0
-        self.volume = 0
         self.color = "#000"
 
     def calculate_shape(self):
@@ -99,3 +110,7 @@ class RectCoin(object):
                 y0+coin_height,
                 fill=self.color
             )
+
+    def __str__(self):
+        return S.SHAPES["rect"] + " V: " + str(round(self.volume / 1000, 2)) + "cm³"
+        pass

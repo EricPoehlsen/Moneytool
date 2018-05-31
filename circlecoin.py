@@ -1,12 +1,23 @@
+from coin import Coin
 from math import pi, sin, cos, sqrt
+import data
+S = data.DE
 
-class CircleCoin(object):
+
+
+class CircleCoin(Coin):
     def __init__(self, radius, thickness, inner_radius=0):
+        """ manages a circular (cylindrical) coin
+        Args:
+            radius(float): coin radius in mm [> 0.0]
+            thickness(float): coin thickness in mm [> 0.0]
+            inner_radius(float): hole radius in mm [>= 0.0]
+        """
+
+        super().__init__()
         self.radius = radius
         self.inner_radius = inner_radius
         self.thickness = thickness
-        self.area = 0
-        self.volume = 0
 
     def calculate_shape(self):
         """ calculate the shape of a circular (cylindrical) coin
@@ -51,3 +62,6 @@ class CircleCoin(object):
             )
 
         pass
+
+    def __str__(self):
+        return S.SHAPES["circle"] + " V: " + str(round(self.volume / 1000, 2)) + "cm³"

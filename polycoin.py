@@ -1,15 +1,24 @@
+from coin import Coin
 from math import pi, sin, cos, sqrt
+import data
+S = data.DE
 
-class PolyCoin(object):
+class PolyCoin(Coin):
     def __init__(self, sides, radius, thickness, chamfer=0.0):
+        """ manages a polygonal coin
+        Args:
+            sides (int): number of sides [>= 3]
+            radius(float): circumcircle radius in mm [> 0.0]
+            thickness(float): coin thickness in mm [> 0.0]
+            chamfer(float): corner chamfering [0.0 < 1.0]
+        """
+
+        super().__init__()
         self.radius = radius
         self.sides = sides
         self.chamfer = chamfer / 100
         self.thickness = thickness
         self.points = [(0,0)]
-
-        self.area = 0
-        self.volume = 0
 
     def calculate_shape(self):
         """ Calculate points of a (chamfered) regular n-gon """
@@ -102,3 +111,6 @@ class PolyCoin(object):
         if min_y > 0: min_y = 0
 
         canvas.create_polygon(*points, fill="#000")
+
+    def __str__(self):
+        return S.SHAPES["poly"] + " V: " + str(round(self.volume / 1000, 2)) + "cm³"
