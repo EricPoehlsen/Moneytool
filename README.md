@@ -4,10 +4,10 @@ A pretty small, yet quiet sophisticated tool for calculating coins.
 
 By defining a shape and an alloy, this program calculates the weight and value of the coin.
 
-The value is roughly derived from current metal prices.
+The elements values are roughly derived from current metal prices.
 
 ## Future plans
 
-* Creating a system that can generate 'derived' coins with a value relative to the given coin.
-* Options to store coins and alloys
+* storing of coins, alloys and coin sets
+* 1-click generation of coin-sets ...
 * Better visualization, for multiple coins

@@ -258,36 +258,66 @@ class Metallurgy(tk.Frame):
 
 class MetallurgyWindow(tk.Toplevel):
     def __init__(self, master, number):
+        """ This creates a toplevel metallurgy window
+
+        Args:
+            number (int): number of the entry in CoinGenerator
+        """
+
         super().__init__(master)
         self.number = number
 
         self.main_frame = Metallurgy(self)
-        self.main_frame.pack()
-        frame = tk.Frame(self)
-        update_button = tk.Button(frame, text="Update")
-        update_button.pack(side=tk.LEFT)
-        cancel_button = tk.Button(frame, text="Abbrechen")
-        cancel_button.pack(side=tk.LEFT)
-        remove_button = tk.Button(frame, text="Entfernen")
-        remove_button.pack(side=tk.LEFT)
-        frame.pack()
+        self.load_alloy()
+        self.main_frame.pack(side=tk.TOP)
+        remove_button = tk.Button(
+            self,
+            text=S.REMOVE_ALLOY,
+            command=lambda:self.destroy(mode="remove")
+        )
+        remove_button.pack(side=tk.TOP, fill=tk.X)
 
-    def destroy(self):
+    def load_alloy(self):
+        """ loading the current alloy into the editor """
+
+        # get the widgets
+        sliders = self.main_frame.widgets["metal_slider"]
+        value = self.main_frame.widgets["metal_relative"]
+
+        # get the alloy
+        alloy = self.master.coins[self.number].get("alloy", None)
+
+        # ... go ...
+        if alloy:
+            self.main_frame.alloy = alloy
+            for metal, percentage in alloy.items():
+                sliders[metal].set(percentage)
+                text = str(abs(round(100 * alloy[metal], 2))) + " %"
+                value[metal].config(text=text)
+
+    def destroy(self, mode="save"):
+        """ destroy the toplevel window and write the alloy back to the app """
+
         alloy = {k: v for k, v in self.main_frame.alloy.items() if v}
+        if mode == "remove": alloy = None
+
+        # writing app coin data ...
         coins = self.master.coins
         coins[self.number]["alloy"] = alloy
 
-        short_alloy = [(v, k) for k, v in alloy.items() if v]
-        short_alloy = sorted(short_alloy, reverse=True)
-
+        # updating the button ...
         text = ""
-        for entry in short_alloy:
-            v, k = entry
-            text += k + ": " + str(round(v * 100, 2)) + "% - "
+        if alloy:
+            short_alloy = [(v, k) for k, v in alloy.items() if v]
+            short_alloy = sorted(short_alloy, reverse=True)
 
-        if text: text = text[:-3]
+            for entry in short_alloy:
+                v, k = entry
+                text += k + ": " + str(round(v * 100, 2)) + "% - "
+            text = text[:-3]
+        else: text="Legierung"
         button = coins[self.number]["widgets"][2]
         button.config(text=text)
 
-
+        # done ...
         super().destroy()

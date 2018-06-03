@@ -67,8 +67,20 @@ class CoinGenerator(tk.Frame):
                 shape_button.config(text=str(shape))
 
             if shape and value:
-                "GENERATE ::: "
-                self.calculate_alloy(shape, value)
+                alloy = coin["alloy"] = self.calculate_alloy(shape, value)
+
+                # update text ...
+                text = ""
+                alloy_list = [(v, k) for k, v in alloy.items()]
+                alloy_list = sorted(alloy_list, reverse=True)
+                for entry in alloy_list:
+                    v, k = entry
+                    text += k + ": " + str(round(v * 100, 2)) + "% - "
+
+                if text: text = text[:-3]
+                button = widgets[2]
+                button.config(text=text)
+
                 continue
 
             if not alloy:
@@ -127,22 +139,91 @@ class CoinGenerator(tk.Frame):
     def calculate_shape(self, value, alloy):
         pass
 
+    @staticmethod
+    def partial_alloy(metal, volume, percentage, target_value):
+        """ iteration to find the volume percentage of a metal closest to the price
+        Args:
+            metal (str): Element Symbol of metal
+            volume (float): total volume of of coin in cm³
+            percentage (float): starting volume percentage 0.0 => 1.0
+            target_value(float): monetary value this percentage should yield
+
+        Returns: (price (int), metal (str), price (float))
+        """
+
+        metal_value = data.Metals.DATA[metal][2] / 1000
+        density = data.Metals.DATA[metal][1]
+        within_price_range = False
+        price = 0
+        while not within_price_range:
+            percentage -= .01
+            mass = percentage * volume * density
+            price = mass * metal_value
+            if price < target_value: within_price_range = True
+            if percentage <= 0: break
+
+        return [price, metal, percentage]
+
     def calculate_alloy(self, shape, value):
         """ create an alloy based on a target coin value and shape """
 
-        metals = {name: [] for name in data.Metals.DATA}
+        # primary metal selection ...
+        precious = ["Au", "Au", "Au", "Pd", "Pt"]
+        medium = ["Ag", "Ag", "Ag", "Ti"]
+        low = ["Cu","Cu","Cu","Cu", "Ni", "Sn"]
+        filler = ["Fe", "Al"]
 
-        # value of coin at 100 vol%
+        main_metals = [
+            random.choice(precious),
+            random.choice(medium),
+            random.choice(low)
+        ]
+
         volume = shape.volume / 1000
-        for metal in metals:
+        alloy = []
+
+        vol = volume
+        val = value
+        for i in range(3):
+            selection = []
+
+            # approximate main metal and volume
+            for metal in main_metals:
+                selection.append(self.partial_alloy(metal, vol, 1, val))
+
+            selection = sorted(selection)
+            alloy.append(selection[-1])
+            vol *= (1 - alloy[i][2])
+            val -= alloy[i][0]
+
+        # to absolute percentages
+        alloy[1][2] = (1 - alloy[0][2]) * alloy[1][2]
+        alloy[2][2] = (1 - alloy[0][2] - alloy[1][2]) * alloy[2][2]
+
+        # volumetric alloy ...
+        volume_alloy = {
+            alloy[0][1]: round(alloy[0][2], 2),
+            alloy[1][1]: round(alloy[1][2], 2),
+            alloy[2][1]: round(alloy[2][2], 2),
+        }
+        residual = 1
+        for v in volume_alloy.values(): residual -= v
+        volume_alloy[random.choice(filler)] = residual
+
+        # ... needs to be converted into a mass based alloy ...
+        total_mass = 0
+        for metal, percentage in volume_alloy.items():
             density = data.Metals.DATA[metal][1]
-            value = data.Metals.DATA[metal][2]
+            total_mass += percentage * volume * density
 
-            mass = volume * density
-            price = mass * value
-            metals[metal].append(price)
-        print(metals)
+        alloy = {}
+        for metal, percentage in volume_alloy.items():
+            density = data.Metals.DATA[metal][1]
+            mass = percentage * volume * density
+            percentage = round(mass/total_mass, 2)
+            alloy[metal] = percentage
 
+        return alloy
 
     def random_shape(self):
         """ generate a random coin based on some constraints ... """

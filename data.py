@@ -90,6 +90,7 @@ class DE(object):
     VOLUME = "Volumen: "
     WEIGHT = "Gewicht: "
     VALUE = "Wert: "
+    REMOVE_ALLOY = "Legierung entfernen"
 
     SHAPES = {
         "circle": "Kreis",
