@@ -30,6 +30,10 @@ class Metals(object):
         3: ["Mg", "Cr", "V", "Pb", "Ti", "W"]
     }
 
+class Export(object):
+    DPI = 300
+    MARGIN = 10
+
 class DE(object):
     """ language class for German """
 

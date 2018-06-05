@@ -9,8 +9,15 @@ class Coin(object):
     def calculate_shape(self):
         pass
 
+    def generate_shape(self, volume):
+        pass
+
     def draw(self, canvas):
         pass
+
+    def image(self):
+        """ should return a PIL Image """
+        raise NotImplementedError("Should return PIL image")
 
     def __str__(self):
         return "Coin"

@@ -1,7 +1,8 @@
 import data
 from coin import Coin
 from math import pi, sin, cos, sqrt
-
+import random
+from PIL import Image, ImageDraw, ImageTk
 S = data.DE
 
 class RectCoin(Coin):
@@ -41,75 +42,84 @@ class RectCoin(Coin):
 
         self.volume = self.area * self.thickness
 
+    def generate_shape(self, volume):
+        """ Generate a shape given a specific volume
+        Args:
+            volume (float): volume in cm³
+        """
+
+        # assuming minimum thickness of 1/10 mm
+        max_area = volume * 1000 * 10
+
+        # target area
+        area = min([random.random() * (max_area / i) for i in range(1, 5)])
+
+        # calculating sides
+        length = random.random() * area
+        width = area / length
+
+        # generating border radius
+        max_corner_radius = min(length, width) / 2
+        corner_radius = max((random.random() - 0.5) * max_corner_radius, 0)
+        area -= (2 * corner_radius) ** 2 + pi * corner_radius ** 2
+
+        # calculating thicnkness
+        thickness = volume * 1000 / area
+
+        # updating data ...
+        self.width = width
+        self.length = length
+        self.thickness = thickness
+        self.area = area
+        self.volume = volume * 1000
+        self.corner_radius = corner_radius
+
+    def image(self):
+        """ Create an Image of the coin """
+
+        # image dimension ...
+        x_dim = int(data.Export.DPI * self.length * 0.1 / 2.54)
+        y_dim = int(data.Export.DPI * self.width * 0.1 / 2.54)
+        margin = data.Export.MARGIN
+        c_rad = self.corner_radius * data.Export.DPI * 0.1 / 2.54
+        img_x = x_dim + data.Export.MARGIN
+        img_y = y_dim + data.Export.MARGIN
+
+        image = Image.new("RGBA", (img_x, img_y))
+
+        draw = ImageDraw.Draw(image)
+        draw.rectangle(
+            (margin, margin+c_rad, margin+x_dim, margin+y_dim-c_rad),
+            fill=(0, 0, 0, 255)
+        )
+        if c_rad:
+            draw.rectangle(
+                (margin+c_rad, margin, margin + x_dim-c_rad, margin + y_dim),
+                fill=(0, 0, 0, 255)
+            )
+            xy_0 = [
+                (margin, margin),
+                (margin + x_dim - 2*c_rad, margin),
+                (margin, margin + y_dim - 2*c_rad),
+                (margin + x_dim - 2*c_rad, margin + y_dim - 2*c_rad)
+            ]
+            for entry in xy_0:
+                print("ENTRY: ", entry)
+                x, y = entry
+                draw.ellipse((x, y, x+2*c_rad, y+2*c_rad), fill=(0,0,0,255))
+
+        return image
 
     def draw(self, canvas):
+        """ draw PIL image to canvas ... """
 
         canvas.delete("all")
         width = canvas.winfo_width()
         height = canvas.winfo_height()
 
-        x_scale = (width * 0.8) / self.length
-        y_scale = (height * 0.8) / self.width
-        scale = min(x_scale, y_scale)
-
-        coin_width = self.length * scale
-        coin_height = self.width * scale
-        corners = self.corner_radius * scale
-
-        x0 = (width - coin_width) / 2
-        y0 = (height - coin_height) / 2
-
-        if not corners:
-            canvas.create_rectangle(
-                x0,
-                y0,
-                x0+coin_width,
-                y0+coin_height,
-                fill=self.color
-            )
-        else:
-            canvas.create_rectangle(
-                x0,
-                y0+corners,
-                x0+coin_width,
-                y0+coin_height-corners,
-                fill=self.color
-            )
-            canvas.create_rectangle(
-                x0+corners,
-                y0,
-                x0+coin_width-corners,
-                y0+coin_height,
-                fill=self.color
-            )
-            canvas.create_oval(
-                x0,
-                y0,
-                x0+2*corners,
-                y0+2*corners,
-                fill=self.color
-            )
-            canvas.create_oval(
-                x0+coin_width-2*corners,
-                y0,
-                x0+coin_width,
-                y0+2*corners,
-                fill=self.color
-            )
-            canvas.create_oval(
-                x0,
-                y0+coin_height-2*corners,
-                x0+2*corners,
-                y0+coin_height,
-                fill=self.color
-            )
-            canvas.create_oval(
-                x0+coin_width-2*corners,
-                y0+coin_height-2*corners,
-                x0+coin_width,
-                y0+coin_height,
-                fill=self.color
-            )
+        image = ImageTk.PhotoImage(self.image())
+        canvas.create_image(width/2, height/2, image=image)
+        canvas.img = image
 
     def __str__(self):
         return S.SHAPES["rect"] + " V: " + str(round(self.volume / 1000, 2)) + "cm³"
