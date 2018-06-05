@@ -96,6 +96,9 @@ class DE(object):
     VALUE = "Wert: "
     REMOVE_ALLOY = "Legierung entfernen"
 
+    ACCEPT = "Übernehmen"
+    CANCEL = "Abbrechen"
+
     SHAPES = {
         "circle": "Kreis",
         "rect": "Rechteck",

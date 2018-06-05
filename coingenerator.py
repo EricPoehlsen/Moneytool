@@ -1,4 +1,5 @@
 import tkinter as tk
+from PIL import ImageTk, Image
 import random
 from metallurgy import MetallurgyWindow
 from coindesigner import CoinDesignerWindow
@@ -13,8 +14,9 @@ import data
 S = data.DE
 
 class CoinGenerator(tk.Frame):
-    def __init__(self, screen):
+    """ Generate multiple coins by input or pseudo-randomly """
 
+    def __init__(self, screen):
         super().__init__(screen)
         self.coins = []
         self.widgets = {}
@@ -26,6 +28,8 @@ class CoinGenerator(tk.Frame):
         frame.pack(fill=tk.X, expand=1, anchor=tk.N)
 
     def add_coin(self):
+        """ add a new coin to the set """
+
         self.coins.append([])
 
         i = len(self.coins) - 1
@@ -47,6 +51,8 @@ class CoinGenerator(tk.Frame):
         self.coins[i] = {"widgets": widgets}
 
     def generate(self):
+        """ calculate missing values for all coins """
+
         for coin in self.coins:
             widgets = coin.get("widgets")
             shape = coin.get("shape")
@@ -63,7 +69,20 @@ class CoinGenerator(tk.Frame):
 
                 # update text ...
                 shape_button = widgets[0]
-                shape_button.config(text=str(shape))
+                image = shape.image()
+                scale = 32 / image.height
+                x = int(scale * image.width)
+                y = int(scale * image.height)
+                image = image.resize((x, y), Image.BICUBIC)
+                image = ImageTk.PhotoImage(image)
+                shape_button.config(
+                    anchor=tk.W,
+                    width=300,
+                    text=str(shape),
+                    image=image,
+                    compound=tk.LEFT
+                )
+                shape_button.img = image
 
             if shape and value:
                 alloy = coin["alloy"] = self.calculate_alloy(shape, value)

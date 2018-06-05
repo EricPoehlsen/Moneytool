@@ -5,6 +5,7 @@ from polycoin import PolyCoin
 from circlecoin import CircleCoin
 from rectcoin import RectCoin
 from metallurgy import Metallurgy
+from PIL import Image, ImageTk
 
 S = data.DE
 
@@ -170,13 +171,32 @@ class CoinDesignerWindow(tk.Toplevel):
 
         self.shape_selector = CoinDesigner(self)
         self.shape_selector.pack()
-
+        cancel = tk.Button(self, text=S.CANCEL, command=lambda:self.destroy(commit=False))
+        cancel.pack(fill=tk.X)
+        ok = tk.Button(self, text=S.ACCEPT, command=lambda:self.destroy(commit=True))
+        ok.pack(fill=tk.X)
         self.number = number
 
-    def destroy(self):
+    def destroy(self, commit=True):
         coin = self.shape_selector.coin
-        coins = self.master.coins
-        coins[self.number]["shape"] = coin
-        button = coins[self.number]["widgets"][0]
-        button.config(text=str(coin))
+        if commit and coin:
+            coin = self.shape_selector.coin
+            coins = self.master.coins
+            coins[self.number]["shape"] = coin
+            button = coins[self.number]["widgets"][0]
+            image = coin.image()
+            scale = 32 / image.height
+            x = int(scale * image.width)
+            y = int(scale * image.height)
+            image = image.resize((x, y), Image.BICUBIC)
+            image = ImageTk.PhotoImage(image)
+            button.config(
+                anchor=tk.W,
+                width=300,
+                text=str(coin),
+                image=image,
+                compound=tk.LEFT
+            )
+            button.img = image
+
         super().destroy()
