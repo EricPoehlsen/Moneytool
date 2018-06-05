@@ -52,7 +52,6 @@ class CoinGenerator(tk.Frame):
             shape = coin.get("shape")
             alloy = coin.get("alloy")
             value = coin.get("value")
-            print(value)
 
             if value and alloy:
                 self.calculate_shape(value, alloy)
@@ -106,6 +105,9 @@ class CoinGenerator(tk.Frame):
                 entry.delete(0, tk.END)
                 entry.insert(0, text)
 
+            try: coin["shape"].image()
+            except: pass
+
     def calculate_value(self, shape, alloy):
         """ Calculate the value of a coin given shape and alloy
             shape (Coin): shape information for a coin
@@ -137,7 +139,20 @@ class CoinGenerator(tk.Frame):
         return coin_value
 
     def calculate_shape(self, value, alloy):
-        pass
+        density = 0
+        metal_value = 0
+        for metal, percentage in alloy.items():
+            density += percentage * data.Metals.DATA[metal][1]
+            metal_value += percentage * data.Metals.DATA[metal][2] / 1000
+
+        weight = value / metal_value
+        volume = weight / density
+        C = CircleCoin
+        R = RectCoin
+        P = PolyCoin
+        selection = [C(1,1), C(1,1), C(1,1), R(1,1,1), P(1,1,1)]
+        coin = random.choice(selection)
+        coin.generate_shape(volume)
 
     @staticmethod
     def partial_alloy(metal, volume, percentage, target_value):
