@@ -7,7 +7,11 @@ S = data.DE
 
 
 class CircleCoin(Coin):
-    def __init__(self, radius, thickness, inner_radius=0):
+    DIMS = ["radius", "inner_radius", "thickness"]
+    UNITS = ["mm", "mm", "mm"]
+    NAME = "circle"
+
+    def __init__(self, radius=1, thickness=1, inner_radius=0):
         """ manages a circular (cylindrical) coin
         Args:
             radius(float): coin radius in mm [> 0.0]
@@ -81,8 +85,8 @@ class CircleCoin(Coin):
     def draw(self, canvas):
         """ Draw PIL image to canvas """
         canvas.delete("all")
-        width = canvas.winfo_width()
-        height = canvas.winfo_height()
+        width = canvas.winfo_reqwidth()
+        height = canvas.winfo_reqheight()
 
         image = ImageTk.PhotoImage(self.image())
         canvas.create_image(width/2, height/2, image=image)

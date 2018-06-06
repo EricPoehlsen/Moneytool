@@ -289,8 +289,9 @@ class MetallurgyWindow(tk.Toplevel):
 
         # ... go ...
         if alloy:
-            self.main_frame.alloy = alloy
+            self.main_frame.alloy = {metal: 0 for metal in data.Metals.DATA}
             for metal, percentage in alloy.items():
+                self.main_frame.alloy[metal] = percentage
                 sliders[metal].set(percentage)
                 text = str(abs(round(100 * alloy[metal], 2))) + " %"
                 value[metal].config(text=text)

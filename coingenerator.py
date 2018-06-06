@@ -53,7 +53,7 @@ class CoinGenerator(tk.Frame):
         self.coins[i] = {"widgets": widgets}
 
     def delete_coin(self, i):
-        """ remove a coin """
+        """ removes a coin """
 
         # destroy widgets
         widgets=self.coins[i]["widgets"]
@@ -79,31 +79,47 @@ class CoinGenerator(tk.Frame):
             alloy = coin.get("alloy")
             value = coin.get("value")
 
-            if value and alloy:
-                self.calculate_shape(value, alloy)
+            # first just try to update the value ...
+            if shape and alloy:
+                if value:
+                    value = value.replace("$", "")
+                    try: value = float(value)
+                    except ValueError: value = 0.0
+                    new_value = self.calculate_value(shape, alloy)
+
+                value = self.calculate_value(shape, alloy)
+                text = str(round(value, 2)) + "$"
+                entry = widgets[1]
+                entry.delete(0, tk.END)
+                entry.insert(0, text)
                 continue
 
+            # in case no shape is defined - calculate one
+            if value and alloy:
+                shape = coin["shape"] = self.calculate_shape(value, alloy)
+
+            # ...obviously we are on a total random run ...
             if not shape:
-                # generate random shape
                 shape = coin["shape"] = self.random_shape()
 
-                # update text ...
-                shape_button = widgets[0]
-                image = shape.image()
-                scale = 32 / image.height
-                x = int(scale * image.width)
-                y = int(scale * image.height)
-                image = image.resize((x, y), Image.BICUBIC)
-                image = ImageTk.PhotoImage(image)
-                shape_button.config(
-                    anchor=tk.W,
-                    width=300,
-                    text=str(shape),
-                    image=image,
-                    compound=tk.LEFT
-                )
-                shape_button.img = image
+            # update the shape button in any case ...
+            shape_button = widgets[0]
+            image = shape.image()
+            scale = 32 / image.height
+            x = int(scale * image.width)
+            y = int(scale * image.height)
+            image = image.resize((x, y), Image.BICUBIC)
+            image = ImageTk.PhotoImage(image)
+            shape_button.config(
+                anchor=tk.W,
+                width=300,
+                text=str(shape),
+                image=image,
+                compound=tk.LEFT
+            )
+            shape_button.img = image
 
+            # try to create an appropriate alloy
             if shape and value:
                 alloy = coin["alloy"] = self.calculate_alloy(shape, value)
 
@@ -121,6 +137,7 @@ class CoinGenerator(tk.Frame):
 
                 continue
 
+            # should we end up here, it is the random run ... just make some alloy
             if not alloy:
                 # generate random alloy
                 alloy = coin["alloy"] = self.random_alloy()
@@ -137,15 +154,13 @@ class CoinGenerator(tk.Frame):
                 button = widgets[2]
                 button.config(text=text)
 
+            # ... finally calculate the value
             if shape and alloy:
                 value = self.calculate_value(shape, alloy)
                 text = str(round(value, 2)) + "$"
                 entry = widgets[1]
                 entry.delete(0, tk.END)
                 entry.insert(0, text)
-
-            try: coin["shape"].image()
-            except: pass
 
     def calculate_value(self, shape, alloy):
         """ Calculate the value of a coin given shape and alloy
@@ -192,6 +207,7 @@ class CoinGenerator(tk.Frame):
         selection = [C(1,1), C(1,1), C(1,1), R(1,1,1), P(1,1,1)]
         coin = random.choice(selection)
         coin.generate_shape(volume)
+        return coin
 
     @staticmethod
     def partial_alloy(metal, volume, percentage, target_value):

@@ -7,7 +7,11 @@ S = data.DE
 
 
 class PolyCoin(Coin):
-    def __init__(self, sides, radius, thickness, chamfer=0.0):
+    DIMS = ("sides", "radius", "thickness", "chamfer")
+    UNITS = ("", "mm", "mm", "%")
+    NAME = "poly"
+
+    def __init__(self, sides=3, radius=1.0, thickness=1.0, chamfer=0.0):
         """ manages a polygonal coin
         Args:
             sides (int): number of sides [>= 3]
@@ -162,8 +166,8 @@ class PolyCoin(Coin):
 
         canvas.delete("all")
 
-        width = canvas.winfo_width()
-        height = canvas.winfo_height()
+        width = canvas.winfo_reqwidth()
+        height = canvas.winfo_reqheight()
         image = ImageTk.PhotoImage(self.image())
         canvas.create_image(width/2 ,height/2 ,image=image)
         canvas.img = image

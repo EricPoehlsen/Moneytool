@@ -10,13 +10,13 @@ from PIL import Image, ImageTk
 S = data.DE
 
 class CoinDesigner(tk.Frame):
-    def __init__(self, screen):
+    def __init__(self, screen, coin=None):
         super().__init__(screen)
 
         # place to keep tk variables
         self.vars = {}
         self.widgets = {}
-        self.coin = None
+        self.coin = coin
         self.canvas = tk.Canvas(self)
         self.canvas.config(width=400, height=400)
 
@@ -39,7 +39,12 @@ class CoinDesigner(tk.Frame):
         shape = self.vars["shape"] = tk.StringVar()
         shape.trace("w", self.update_shape_entry)
 
-        shape.set(shapes[0])
+        # set to shape of current coin
+        if self.coin:
+            current = S.SHAPES[self.coin.NAME]
+        else:
+            current = shapes[0]
+        shape.set(current)
         selector = tk.OptionMenu(frame, shape, *shapes)
         selector.config(width=20)
         selector.pack(fill=tk.X, expand=1)
@@ -49,112 +54,90 @@ class CoinDesigner(tk.Frame):
 
         container = self.shape_entry
         selected = self.vars["shape"].get()
+        self.widgets = {}
 
         # clear the current entry area ...
         widgets = container.winfo_children()
         for widget in widgets:
             widget.destroy()
-        vars = self.vars["shape_data"] = {}
-        names = self.vars["var_names"] = {}
 
         # remove the drawing of the last coin ...
         self.canvas.delete("all")
 
-        dimensions = []
-        dim_unit = []
-
-        # defining the dimensions for the shapes ...
+        # creating the coin ...
         # ... rectangle ...
         if selected == S.SHAPES["rect"]:
-            dimensions = [
-                "length",
-                "width",
-                "thickness",
-                "corners"
-            ]
-            dim_unit = ["mm", "mm", "mm", "mm"]
-
-        # ... circle ...
-        if selected == S.SHAPES["circle"]:
-            dimensions = [
-                "radius",
-                "inner_radius",
-                "thickness"
-            ]
-            dim_unit = ["mm", "mm", "mm"]
-
+            new_coin = RectCoin()
         # ... polygon ...
-        if selected == S.SHAPES["poly"]:
-            dimensions = [
-                "sides",
-                "radius",
-                "chamfer",
-                "thickness"
-            ]
-            dim_unit = ["", "mm", "%", "mm"]
+        elif selected == S.SHAPES["poly"]:
+            new_coin = PolyCoin()
+        # ... circle ...
+        else:
+            new_coin = CircleCoin()
 
-        # creating the tk.StringVars to store and trace the data
-        labels = []
-        variables = []
-        for dim in dimensions:
-            vars[dim] = tk.StringVar()
-            names[str(vars[dim])] = dim
-            labels.append(S.SHAPE_DATA[dim])
-            variables.append(vars[dim])
+        if type(new_coin) != type(self.coin):
+            self.coin = new_coin
+            print(self.coin)
+
+        dimensions = self.coin.DIMS
+        units = self.coin.UNITS
+        labels = [S.SHAPE_DIMENSIONS[dim] for dim in dimensions]
 
         # packing - unpacking and constructing the entry fields ...
-        for i, l, v, u in zip(range(len(labels)), labels, variables, dim_unit):
+        for i, l, u, d in zip(range(len(labels)), labels, units, dimensions):
 
             label = tk.Label(container, text=l, anchor=tk.W)
             label.grid(row=i, column=0)
-            v.set(0)
-            v.trace("w", self.update_shape)
-            entry = tk.Entry(container, width=4, textvariable=v)
+            var = tk.StringVar()
+            var.set(getattr(self.coin, d, 0))
+            var.trace("w", self.update_shape)
+            self.widgets[d] = entry = tk.Entry(container, width=4, textvariable=var)
+            entry.var = var
             entry.grid(row=i, column=1)
             unit = tk.Label(container, text=u, anchor=tk.W)
             unit.grid(row=i, column=2)
 
-    def update_shape(self, varname, e=None, m=None):
+    def update_shape(self, n=None, e=None, m=None):
         """ recalculate the shape after it was changed
 
         this is realized as 'trace' callback on the entry variables ...
         """
-
-        # replace commas with decimal in the entry
-        changed = self.vars["shape_data"][self.vars["var_names"][varname]]
-        if "," in changed.get():
-            changed.set(changed.get().replace(",", "."))
-
-        # tk.StringVar() => float (but be careful it is user input!)
-        try:
-            data = {k: float(v.get()) for k, v in self.vars["shape_data"].items()}
-        except ValueError:
-            return
 
         # create the coin  ...
         shapes = {v: k for k, v in S.SHAPES.items()}
         shape = self.vars["shape"].get()
         selected = shapes[shape]
 
+        def to_number(v):
+            """ number conversion for dict comprehension below ... """
+            value = v.var.get()
+            if "," in value: value = value.replace(",", ".")
+            try:
+                value = float(value)
+                v.config(bg="#fff")
+            except ValueError:
+                value = 0
+                v.config(bg="#f00")
+            return value
+
+        data = {k: to_number(v) for k, v in self.widgets.items()}
+
         if selected == "circle":
-            radius = data["radius"]
-            inner_radius = data["inner_radius"]
-            thickness = data["thickness"]
-            self.coin = CircleCoin(radius, thickness, inner_radius)
+            self.coin.radius = data["radius"]
+            self.coin.inner_radius = data["inner_radius"]
+            self.coin.thickness = data["thickness"]
 
         elif selected == "rect":
-            length = data["length"]
-            width = data["width"]
-            thickness = data["thickness"]
-            corners = data["corners"]
-            self.coin = RectCoin(length, width, thickness, corners)
+            self.coin.length = data["length"]
+            self.coin.width = data["width"]
+            self.coin.thickness = data["thickness"]
+            self.coin.corner_radius = data["corner_radius"]
 
         elif selected == "poly":
-            radius = data["radius"]
-            sides = int(data["sides"])
-            chamfer = data["chamfer"]
-            thickness = data["thickness"]
-            self.coin = PolyCoin(sides, radius, thickness, chamfer)
+            self.coin.radius = data["radius"]
+            self.coin.sides = int(data["sides"])
+            self.coin.chamfer = data["chamfer"]
+            self.coin.thickness = data["thickness"]
 
         try:
             self.coin.calculate_shape()
@@ -167,7 +150,9 @@ class CoinDesignerWindow(tk.Toplevel):
     def __init__(self, master, number):
         super().__init__(master)
 
-        self.shape_selector = CoinDesigner(self)
+        coin = self.master.coins[number].get("shape")
+        self.shape_selector = CoinDesigner(self, coin)
+        if coin: self.shape_selector.update_shape()
         self.shape_selector.pack()
         delete = tk.Button(self, text=S.DELETE, command=lambda: self.destroy(mode="delete"))
         delete.pack(fill=tk.X)

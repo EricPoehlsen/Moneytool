@@ -108,7 +108,7 @@ class DE(object):
         "poly": "Vieleck"
     }
 
-    SHAPE_DATA = {
+    SHAPE_DIMENSIONS = {
         "radius": "Radius",
         "inner_radius": "Innenradius",
         "length": "Länge",
@@ -116,7 +116,7 @@ class DE(object):
         "thickness": "Dicke",
         "sides": "Seiten",
         "chamfer": "Fase",
-        "corners": "Abrundung"
+        "corner_radius": "Abrundung"
     }
 
 

@@ -5,8 +5,13 @@ import random
 from PIL import Image, ImageDraw, ImageTk
 S = data.DE
 
+
 class RectCoin(Coin):
-    def __init__(self, length, width, thickness, corner_radius=0.0):
+    DIMS = ["length", "width", "thickness", "corner_radius"]
+    UNITS = ["mm", "mm", "mm", "mm"]
+    NAME = "rect"
+
+    def __init__(self, length=1, width=1, thickness=1, corner_radius=0.0):
         """ manages a rectangular coin
         Args:
             length (float): length of rectangle in mm [> 0.0]
@@ -113,8 +118,8 @@ class RectCoin(Coin):
         """ draw PIL image to canvas ... """
 
         canvas.delete("all")
-        width = canvas.winfo_width()
-        height = canvas.winfo_height()
+        width = canvas.winfo_reqwidth()
+        height = canvas.winfo_reqheight()
 
         image = ImageTk.PhotoImage(self.image())
         canvas.create_image(width/2, height/2, image=image)
