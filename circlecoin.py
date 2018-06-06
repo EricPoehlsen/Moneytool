@@ -6,7 +6,6 @@ from PIL import Image, ImageDraw, ImageTk
 S = data.DE
 
 
-
 class CircleCoin(Coin):
     def __init__(self, radius, thickness, inner_radius=0):
         """ manages a circular (cylindrical) coin
@@ -22,9 +21,7 @@ class CircleCoin(Coin):
         self.thickness = thickness
 
     def calculate_shape(self):
-        """ calculate the shape of a circular (cylindrical) coin
-            returns: [(x,y),...], area
-        """
+        """ calculate the shape of a circular (cylindrical) coin """
 
         # error handling
         if self.radius <= 0: raise ValueError("Radius must be positive.")

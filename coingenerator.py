@@ -35,7 +35,7 @@ class CoinGenerator(tk.Frame):
         i = len(self.coins) - 1
 
         coin = tk.Frame(self)
-        form = tk.Button(coin, text="Form", command=lambda i=i: self.select_shape(i))
+        form = tk.Button(coin, text=S.SELECT_SHAPE, command=lambda i=i: self.select_shape(i))
         form.config(width=20)
         form.pack(side=tk.LEFT)
 
@@ -46,9 +46,29 @@ class CoinGenerator(tk.Frame):
         value.pack(side=tk.LEFT)
         alloy = tk.Button(coin, text="Legierung", command=lambda i=i: self.select_alloy(i))
         alloy.pack(side=tk.LEFT)
+        delete = tk.Button(coin, text="X", command=lambda i=i: self.delete_coin(i))
+        delete.pack(side=tk.LEFT)
         coin.pack(side=tk.TOP)
-        widgets = (form, value, alloy)
+        widgets = (form, value, alloy, delete)
         self.coins[i] = {"widgets": widgets}
+
+    def delete_coin(self, i):
+        """ remove a coin """
+
+        # destroy widgets
+        widgets=self.coins[i]["widgets"]
+        parent_frame = widgets[0].master
+        parent_frame.destroy()
+
+        # remove from list
+        self.coins.pop(i)
+
+        # rewrite commands
+        for i, coin in enumerate(self.coins):
+            coin["widgets"][0].config(command=lambda i=i: self.select_shape(i))
+            coin["widgets"][1].var.trace("w", lambda n, e, m, i=i: self.update_value(i))
+            coin["widgets"][2].config(command=lambda i=i: self.select_alloy(i))
+            coin["widgets"][3].config(command=lambda i=i: self.delete_coin(i))
 
     def generate(self):
         """ calculate missing values for all coins """

@@ -104,7 +104,6 @@ class RectCoin(Coin):
                 (margin + x_dim - 2*c_rad, margin + y_dim - 2*c_rad)
             ]
             for entry in xy_0:
-                print("ENTRY: ", entry)
                 x, y = entry
                 draw.ellipse((x, y, x+2*c_rad, y+2*c_rad), fill=(0,0,0,255))
 
