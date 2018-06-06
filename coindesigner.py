@@ -162,24 +162,24 @@ class CoinDesigner(tk.Frame):
 
         if self.coin.area and self.coin.volume:
             self.coin.draw(self.canvas)
-            print("Area: ", self.coin.area, " | Volume: ", self.coin.volume)
 
 class CoinDesignerWindow(tk.Toplevel):
     def __init__(self, master, number):
-        print(number)
         super().__init__(master)
 
         self.shape_selector = CoinDesigner(self)
         self.shape_selector.pack()
-        cancel = tk.Button(self, text=S.CANCEL, command=lambda:self.destroy(commit=False))
+        delete = tk.Button(self, text=S.DELETE, command=lambda: self.destroy(mode="delete"))
+        delete.pack(fill=tk.X)
+        cancel = tk.Button(self, text=S.CANCEL, command=lambda:self.destroy(mode="cancel"))
         cancel.pack(fill=tk.X)
-        ok = tk.Button(self, text=S.ACCEPT, command=lambda:self.destroy(commit=True))
+        ok = tk.Button(self, text=S.ACCEPT, command=lambda:self.destroy(mode="commit"))
         ok.pack(fill=tk.X)
         self.number = number
 
-    def destroy(self, commit=True):
+    def destroy(self, mode="commit"):
         coin = self.shape_selector.coin
-        if commit and coin:
+        if mode == "commit" and coin:
             coin = self.shape_selector.coin
             coins = self.master.coins
             coins[self.number]["shape"] = coin
@@ -198,5 +198,17 @@ class CoinDesignerWindow(tk.Toplevel):
                 compound=tk.LEFT
             )
             button.img = image
+        if mode == "delete":
+            coins = self.master.coins
+            coins[self.number]["shape"] = None
+            button = coins[self.number]["widgets"][0]
+            button.config(
+                anchor=tk.W,
+                width=300,
+                text=S.SELECT_SHAPE,
+                image=None,
+                compound=tk.LEFT
+            )
+            button.img = None
 
         super().destroy()

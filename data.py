@@ -98,6 +98,9 @@ class DE(object):
 
     ACCEPT = "Übernehmen"
     CANCEL = "Abbrechen"
+    DELETE = "Entfernen"
+
+    SELECT_SHAPE = "Form bestimmen"
 
     SHAPES = {
         "circle": "Kreis",
