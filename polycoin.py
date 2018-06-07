@@ -17,7 +17,7 @@ class PolyCoin(Coin):
             sides (int): number of sides [>= 3]
             radius(float): circumcircle radius in mm [> 0.0]
             thickness(float): coin thickness in mm [> 0.0]
-            chamfer(float): corner chamfering [0.0 < 1.0]
+            chamfer(float): corner chamfering [0.0 < 100.0]
         """
 
         super().__init__()
@@ -33,11 +33,11 @@ class PolyCoin(Coin):
         # error handling
         if self.sides < 3: raise ValueError("Polygon needs at least three sides.")
         if self.radius <= 0: raise ValueError("Radius must be positive.")
-        if not 0.0 <= self.chamfer <= 1.0: raise ValueError("Valid range 0 <= c < 1")
+        if not 0.0 <= self.chamfer <= 100.0: raise ValueError("Valid range 0 <= c < 100")
         if self.thickness <= 0: raise ValueError("Thickness must be positive")
 
         # initial trigonometry ...
-        chamfer = self.chamfer / 2
+        chamfer = self.chamfer / 200
         angle = 360 / self.sides
         side = 2 * self.radius * sin((pi/self.sides))
         radius_inner = sqrt(self.radius**2 - (0.5 * side)**2)

@@ -20,12 +20,45 @@ class CoinGenerator(tk.Frame):
         super().__init__(screen)
         self.coins = []
         self.widgets = {}
+        self.windows = None
         frame = tk.Frame(self)
+        subframe = tk.Frame(frame)
+        calc_forms = tk.Button(
+            subframe,
+            text=S.GENERATE_SHAPES,
+            command=self.generate_shape
+        )
+        calc_forms.grid(row=0, column=0, sticky=tk.NSEW)
+        calc_values = tk.Button(
+            subframe,
+            text=S.GENERATE_VALUES,
+            command=self.generate_shape
+        )
+        calc_values.grid(row=0, column=1, sticky=tk.NSEW)
+        calc_alloys = tk.Button(
+            subframe,
+            text=S.GENERATE_ALLOYS,
+            command=self.generate_shape
+        )
+        calc_alloys.grid(row=0, column=2, sticky=tk.NSEW)
+        subframe.columnconfigure(0, weight=1)
+        subframe.columnconfigure(1, weight=1)
+        subframe.columnconfigure(2, weight=1)
+
+        subframe.pack(fill=tk.X, expand=1)
+
         generate = tk.Button(frame, text=S.GENERATE_COINS, command=self.generate)
         generate.pack(fill=tk.X, expand=1)
         new = tk.Button(frame, text="Add Coin", command=self.add_coin)
         new.pack(fill=tk.X, expand=1)
         frame.pack(fill=tk.X, expand=1, anchor=tk.N)
+        self.coin_frame = tk.Frame(self)
+        self.coin_frame.pack(fill=tk.X, expand=1)
+
+        self.coin_frame.columnconfigure(0, weight=45)
+        self.coin_frame.columnconfigure(1, weight=10)
+        self.coin_frame.columnconfigure(2, weight=45)
+        self.coin_frame.columnconfigure(3, weight=1)
 
     def add_coin(self):
         """ add a new coin to the set """
@@ -34,21 +67,17 @@ class CoinGenerator(tk.Frame):
 
         i = len(self.coins) - 1
 
-        coin = tk.Frame(self)
-        form = tk.Button(coin, text=S.SELECT_SHAPE, command=lambda i=i: self.select_shape(i))
-        form.config(width=20)
-        form.pack(side=tk.LEFT)
-
-        value = tk.Entry(coin)
+        form = tk.Button(self.coin_frame, text=S.SELECT_SHAPE, command=lambda i=i: self.select_shape(i))
+        form.grid(row=i, column=0, sticky=tk.NSEW)
+        value = tk.Entry(self.coin_frame)
         value.var = tk.StringVar()
         value.var.trace("w", lambda n, e, m, i=i: self.update_value(i))
         value.config(textvariable=value.var)
-        value.pack(side=tk.LEFT)
-        alloy = tk.Button(coin, text="Legierung", command=lambda i=i: self.select_alloy(i))
-        alloy.pack(side=tk.LEFT)
-        delete = tk.Button(coin, text="X", command=lambda i=i: self.delete_coin(i))
-        delete.pack(side=tk.LEFT)
-        coin.pack(side=tk.TOP)
+        value.grid(row=i, column=1, sticky=tk.NSEW)
+        alloy = tk.Button(self.coin_frame, text="Legierung", command=lambda i=i: self.select_alloy(i))
+        alloy.grid(row=i, column=2, sticky=tk.NSEW)
+        delete = tk.Button(self.coin_frame, text="X", command=lambda i=i: self.delete_coin(i))
+        delete.grid(row=i, column=3, sticky=tk.NSEW)
         widgets = (form, value, alloy, delete)
         self.coins[i] = {"widgets": widgets}
 
@@ -57,42 +86,36 @@ class CoinGenerator(tk.Frame):
 
         # destroy widgets
         widgets=self.coins[i]["widgets"]
-        parent_frame = widgets[0].master
-        parent_frame.destroy()
+        for widget in widgets:
+            widget.destroy()
 
         # remove from list
         self.coins.pop(i)
 
-        # rewrite commands
+        # rewrite commands and update placement ...
         for i, coin in enumerate(self.coins):
             coin["widgets"][0].config(command=lambda i=i: self.select_shape(i))
-            coin["widgets"][1].var.trace("w", lambda n, e, m, i=i: self.update_value(i))
-            coin["widgets"][2].config(command=lambda i=i: self.select_alloy(i))
-            coin["widgets"][3].config(command=lambda i=i: self.delete_coin(i))
+            coin["widgets"][0].grid(row=i, column=0, sticky=tk.NSEW)
 
-    def generate(self):
-        """ calculate missing values for all coins """
+            coin["widgets"][1].var.trace("w", lambda n, e, m, i=i: self.update_value(i))
+            coin["widgets"][1].grid(row=i, column=1, sticky=tk.NSEW)
+
+            coin["widgets"][2].config(command=lambda i=i: self.select_alloy(i))
+            coin["widgets"][2].grid(row=i, column=2, sticky=tk.NSEW)
+
+            coin["widgets"][3].config(command=lambda i=i: self.delete_coin(i))
+            coin["widgets"][3].grid(row=i, column=3, sticky=tk.NSEW)
+
+    def generate_shape(self, index=-1):
+        coins = self.coins
+        if 0 <= index < len(self.coins):
+            coins = [self.coins[index]]
 
         for coin in self.coins:
             widgets = coin.get("widgets")
             shape = coin.get("shape")
             alloy = coin.get("alloy")
             value = coin.get("value")
-
-            # first just try to update the value ...
-            if shape and alloy:
-                if value:
-                    value = value.replace("$", "")
-                    try: value = float(value)
-                    except ValueError: value = 0.0
-                    new_value = self.calculate_value(shape, alloy)
-
-                value = self.calculate_value(shape, alloy)
-                text = str(round(value, 2)) + "$"
-                entry = widgets[1]
-                entry.delete(0, tk.END)
-                entry.insert(0, text)
-                continue
 
             # in case no shape is defined - calculate one
             if value and alloy:
@@ -119,8 +142,45 @@ class CoinGenerator(tk.Frame):
             )
             shape_button.img = image
 
+    def generate_value(self, index=-1):
+        coins = self.coins
+        if 0 <= index < len(self.coins):
+            coins = [self.coins[index]]
+
+        for coin in self.coins:
+            widgets = coin.get("widgets")
+            shape = coin.get("shape")
+            alloy = coin.get("alloy")
+            value = coin.get("value")
+
+            # first just try to update the value ...
+            if shape and alloy:
+                if value:
+                    if type(value) == str: value = value.replace("€", "")
+                    try: value = float(value)
+                    except ValueError: value = 0.0
+                    new_value = self.calculate_value(shape, alloy)
+
+                value = self.calculate_value(shape, alloy)
+                text = str(round(value, 2)) + "€"
+                entry = widgets[1]
+                entry.delete(0, tk.END)
+                entry.insert(0, text)
+                continue
+
+    def generate_alloy(self, index=-1):
+        coins = self.coins
+        if 0 <= index < len(self.coins):
+            coins = [self.coins[index]]
+
+        for coin in self.coins:
+            widgets = coin.get("widgets")
+            shape = coin.get("shape")
+            alloy = coin.get("alloy")
+            value = coin.get("value")
+
             # try to create an appropriate alloy
-            if shape and value:
+            if shape and value and not alloy:
                 alloy = coin["alloy"] = self.calculate_alloy(shape, value)
 
                 # update text ...
@@ -154,13 +214,12 @@ class CoinGenerator(tk.Frame):
                 button = widgets[2]
                 button.config(text=text)
 
-            # ... finally calculate the value
-            if shape and alloy:
-                value = self.calculate_value(shape, alloy)
-                text = str(round(value, 2)) + "$"
-                entry = widgets[1]
-                entry.delete(0, tk.END)
-                entry.insert(0, text)
+    def generate(self):
+        """ calculate missing values for all coins """
+
+        self.generate_shape()
+        self.generate_alloy()
+        self.generate_value()
 
     def calculate_value(self, shape, alloy):
         """ Calculate the value of a coin given shape and alloy
@@ -388,10 +447,16 @@ class CoinGenerator(tk.Frame):
             number (int): numeric list entry from the current coin list ...
         """
 
-        a = MetallurgyWindow(self, number)
+        if self.windows: self.windows.destroy()
+        self.windows = MetallurgyWindow(self, number)
 
     def select_shape(self, number):
-        a = CoinDesignerWindow(self, number)
+        """ Display the shape selection window for a given coin
+        Args:
+            number (int): numeric list entry from the current coin list ...
+        """
+        if self.windows: self.windows.destroy()
+        self.windows = CoinDesignerWindow(self, number)
 
     def update_value(self, number):
         widget = self.coins[number]["widgets"][1]

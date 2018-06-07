@@ -86,6 +86,10 @@ class DE(object):
     MENU_METALLURGY = "Legierung schmelzen"
 
     GENERATE_COINS = "Münzen erzeugen ..."
+    GENERATE_SHAPES = "Formen berechnen ..."
+    GENERATE_VALUES = "Werte berechnen ..."
+    GENERATE_ALLOYS = "Legierungen erzeugen ..."
+
 
     METAL_GROUPS = "Metalle eingrenzen: "
     METAL_SORT = "Sortierung: "
@@ -99,6 +103,10 @@ class DE(object):
     ACCEPT = "Übernehmen"
     CANCEL = "Abbrechen"
     DELETE = "Entfernen"
+
+    ABOUT_TITLE = "MoneyTool"
+    ABOUT_VERSION = "-"
+    ABOUT_AUTHOR = "Eric Pöhlsen"
 
     SELECT_SHAPE = "Form bestimmen"
 

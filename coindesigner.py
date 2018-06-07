@@ -177,23 +177,24 @@ class CoinDesignerWindow(tk.Toplevel):
             image = ImageTk.PhotoImage(image)
             button.config(
                 anchor=tk.W,
-                width=300,
                 text=str(coin),
                 image=image,
                 compound=tk.LEFT
             )
             button.img = image
+
         if mode == "delete":
             coins = self.master.coins
             coins[self.number]["shape"] = None
-            button = coins[self.number]["widgets"][0]
+            print([x["shape"] for x in coins])
+            button = self.master.coins[self.number]["widgets"][0]
             button.config(
                 anchor=tk.W,
-                width=300,
                 text=S.SELECT_SHAPE,
-                image=None,
-                compound=tk.LEFT
+                image="",
+                width=0
             )
             button.img = None
 
+        self.master.update_idletasks()
         super().destroy()
