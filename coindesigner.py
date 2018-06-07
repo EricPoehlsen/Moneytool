@@ -1,6 +1,7 @@
 import tkinter as tk
 import data
 
+from coin import Coin
 from polycoin import PolyCoin
 from circlecoin import CircleCoin
 from rectcoin import RectCoin
@@ -72,12 +73,14 @@ class CoinDesigner(tk.Frame):
         elif selected == S.SHAPES["poly"]:
             new_coin = PolyCoin()
         # ... circle ...
-        else:
+        elif selected == S.SHAPES["circle"]:
             new_coin = CircleCoin()
+        # ... generic ...
+        else:
+            new_coin = Coin()
 
         if type(new_coin) != type(self.coin):
             self.coin = new_coin
-            print(self.coin)
 
         dimensions = self.coin.DIMS
         units = self.coin.UNITS
@@ -164,27 +167,25 @@ class CoinDesignerWindow(tk.Toplevel):
         self.shape_selector.pack()
 
         # add buttons
-        delete = tk.Button(self, text=S.DELETE, command=lambda: self.destroy(mode="delete"))
+        delete = tk.Button(self, text=S.DELETE, command=self.remove_coin)
         delete.pack(fill=tk.X)
-        cancel = tk.Button(self, text=S.CANCEL, command=lambda:self.destroy(mode="cancel"))
-        cancel.pack(fill=tk.X)
-        ok = tk.Button(self, text=S.ACCEPT, command=lambda:self.destroy(mode="commit"))
+        cancel = tk.Button(self, text=S.CANCEL, command=self.destroy)
+        # cancel.pack(fill=tk.X)
+        ok = tk.Button(self, text=S.ACCEPT, command=self.destroy)
         ok.pack(fill=tk.X)
 
         self.number = number
 
-    def destroy(self, mode="commit"):
-        """ Destroy window, write data back before closing
-        Args:
-            mode (str): "commit" write changes - "delete" remove coin shape
+    def remove_coin(self):
+        self.shape_selector.coin = Coin()
+        self.destroy()
 
-        """
+    def destroy(self):
+        """ Destroy window, write data back before closing """
 
         coin = self.shape_selector.coin
 
-        # DEBUG INFO: This works as intended, the coin is updated an the data is changed
-        if mode == "commit" and coin:
-            coin = self.shape_selector.coin
+        if coin:
             coins = self.master.coins
             coins[self.number]["shape"] = coin
             button = coins[self.number]["widgets"][0]
@@ -202,20 +203,4 @@ class CoinDesignerWindow(tk.Toplevel):
             )
             button.img = image
 
-        # DEBUG INFO: This does not work as assumed. The entry is set to None but
-        # reappears once any other button is clicked in the parent widget ...
-        if mode == "delete":
-            coins = self.master.coins
-            coins[self.number]["shape"] = None
-            print([x["shape"] for x in coins])
-            button = self.master.coins[self.number]["widgets"][0]
-            button.config(
-                anchor=tk.W,
-                text=S.SELECT_SHAPE,
-                image="",
-                width=0
-            )
-            button.img = None
-
-        self.master.update_idletasks()
         super().destroy()

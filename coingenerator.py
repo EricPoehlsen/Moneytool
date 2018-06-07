@@ -49,7 +49,7 @@ class CoinGenerator(tk.Frame):
 
         generate = tk.Button(frame, text=S.GENERATE_COINS, command=self.generate)
         generate.pack(fill=tk.X, expand=1)
-        new = tk.Button(frame, text="Add Coin", command=self.add_coin)
+        new = tk.Button(frame, text=S.ADD_COIN, command=self.add_coin)
         new.pack(fill=tk.X, expand=1)
         frame.pack(fill=tk.X, expand=1, anchor=tk.N)
         self.coin_frame = tk.Frame(self)
@@ -122,7 +122,7 @@ class CoinGenerator(tk.Frame):
                 shape = coin["shape"] = self.calculate_shape(value, alloy)
 
             # ...obviously we are on a total random run ...
-            if not shape:
+            if not shape or shape.volume == 0:
                 shape = coin["shape"] = self.random_shape()
 
             # update the shape button in any case ...

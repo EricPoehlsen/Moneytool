@@ -1,6 +1,12 @@
+from PIL import Image, ImageTk
+
 
 class Coin(object):
     """ super class for all coin objects ... """
+
+    DIMS = []
+    UNITS = []
+    NAME = "generic"
 
     def __init__(self):
         self.area = 0
@@ -13,11 +19,14 @@ class Coin(object):
         pass
 
     def draw(self, canvas):
-        pass
+        """ clear canvas """
+        canvas.delete("all")
+        image = ImageTk.PhotoImage(self.image)
+        canvas.create_image(image)
 
     def image(self):
         """ should return a PIL Image """
-        raise NotImplementedError("Should return PIL image")
+        return Image.new("RGBA", (1,1))
 
     def __str__(self):
-        return "Coin"
+        return "EMPTY"

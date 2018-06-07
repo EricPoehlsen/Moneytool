@@ -89,7 +89,7 @@ class DE(object):
     GENERATE_SHAPES = "Formen berechnen ..."
     GENERATE_VALUES = "Werte berechnen ..."
     GENERATE_ALLOYS = "Legierungen erzeugen ..."
-
+    ADD_COIN = "Münze hinzufügen ..."
 
     METAL_GROUPS = "Metalle eingrenzen: "
     METAL_SORT = "Sortierung: "
@@ -113,7 +113,8 @@ class DE(object):
     SHAPES = {
         "circle": "Kreis",
         "rect": "Rechteck",
-        "poly": "Vieleck"
+        "poly": "Vieleck",
+        "generic": "unbestimmt"
     }
 
     SHAPE_DIMENSIONS = {
