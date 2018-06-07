@@ -148,22 +148,41 @@ class CoinDesigner(tk.Frame):
 
 class CoinDesignerWindow(tk.Toplevel):
     def __init__(self, master, number):
+        """ Creates a top level window for the coin designer
+        Args:
+            master (CoinGenerator): the parent widget
+            number (int): index of coin to modify
+        """
+
         super().__init__(master)
 
         coin = self.master.coins[number].get("shape")
+
+        # set up CoinDesigner
         self.shape_selector = CoinDesigner(self, coin)
         if coin: self.shape_selector.update_shape()
         self.shape_selector.pack()
+
+        # add buttons
         delete = tk.Button(self, text=S.DELETE, command=lambda: self.destroy(mode="delete"))
         delete.pack(fill=tk.X)
         cancel = tk.Button(self, text=S.CANCEL, command=lambda:self.destroy(mode="cancel"))
         cancel.pack(fill=tk.X)
         ok = tk.Button(self, text=S.ACCEPT, command=lambda:self.destroy(mode="commit"))
         ok.pack(fill=tk.X)
+
         self.number = number
 
     def destroy(self, mode="commit"):
+        """ Destroy window, write data back before closing
+        Args:
+            mode (str): "commit" write changes - "delete" remove coin shape
+
+        """
+
         coin = self.shape_selector.coin
+
+        # DEBUG INFO: This works as intended, the coin is updated an the data is changed
         if mode == "commit" and coin:
             coin = self.shape_selector.coin
             coins = self.master.coins
@@ -183,6 +202,8 @@ class CoinDesignerWindow(tk.Toplevel):
             )
             button.img = image
 
+        # DEBUG INFO: This does not work as assumed. The entry is set to None but
+        # reappears once any other button is clicked in the parent widget ...
         if mode == "delete":
             coins = self.master.coins
             coins[self.number]["shape"] = None
