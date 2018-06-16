@@ -7,8 +7,8 @@ S = data.DE
 
 
 class RectCoin(Coin):
-    DIMS = ["length", "width", "thickness", "corner_radius"]
-    UNITS = ["mm", "mm", "mm", "mm"]
+    DIMS = ("length", "width", "thickness", "corner_radius")
+    UNITS = ("mm", "mm", "mm", "mm")
     NAME = "rect"
 
     def __init__(self, length=1, width=1, thickness=1, corner_radius=0.0):

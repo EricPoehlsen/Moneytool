@@ -7,8 +7,8 @@ S = data.DE
 
 
 class CircleCoin(Coin):
-    DIMS = ["radius", "inner_radius", "thickness"]
-    UNITS = ["mm", "mm", "mm"]
+    DIMS = ("radius", "inner_radius", "thickness")
+    UNITS = ("mm", "mm", "mm")
     NAME = "circle"
 
     def __init__(self, radius=1, thickness=1, inner_radius=0):

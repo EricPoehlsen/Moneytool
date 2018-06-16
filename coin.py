@@ -4,8 +4,8 @@ from PIL import Image, ImageTk
 class Coin(object):
     """ super class for all coin objects ... """
 
-    DIMS = []
-    UNITS = []
+    DIMS = ()
+    UNITS = ()
     NAME = "generic"
 
     def __init__(self):
