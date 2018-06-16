@@ -16,9 +16,10 @@ class MainScreen(tk.Frame):
         self.menu = tk.Menu(screen)
         screen.config(menu=self.menu)
         self.build_menu()
-        current = CoinGenerator(self)
-        current.pack(fill=tk.BOTH, expand=1)
-        self.loaded_alloys = {}
+        self.screen = CoinGenerator(self)
+        self.screen.pack(fill=tk.BOTH, expand=1)
+
+
 
     def build_menu(self):
         """ construction the menu ... """

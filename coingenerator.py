@@ -7,8 +7,10 @@ from coindesigner import CoinDesignerWindow
 from rectcoin import RectCoin
 from circlecoin import CircleCoin
 from polycoin import PolyCoin
-
+from alloy import Alloy
 import data
+
+
 
 
 S = data.DE
@@ -32,13 +34,13 @@ class CoinGenerator(tk.Frame):
         calc_values = tk.Button(
             subframe,
             text=S.GENERATE_VALUES,
-            command=self.generate_shape
+            command=self.generate_value
         )
         calc_values.grid(row=0, column=1, sticky=tk.NSEW)
         calc_alloys = tk.Button(
             subframe,
             text=S.GENERATE_ALLOYS,
-            command=self.generate_shape
+            command=self.generate_alloy
         )
         calc_alloys.grid(row=0, column=2, sticky=tk.NSEW)
         subframe.columnconfigure(0, weight=1)
@@ -296,63 +298,20 @@ class CoinGenerator(tk.Frame):
     def calculate_alloy(self, shape, value):
         """ create an alloy based on a target coin value and shape """
 
-        # primary metal selection ...
-        precious = ["Au", "Au", "Au", "Pd", "Pt"]
-        medium = ["Ag", "Ag", "Ag", "Ti"]
-        low = ["Cu","Cu","Cu","Cu", "Ni", "Sn"]
-        filler = ["Fe", "Al"]
-
-        main_metals = [
-            random.choice(precious),
-            random.choice(medium),
-            random.choice(low)
-        ]
-
         volume = shape.volume / 1000
-        alloy = []
 
-        vol = volume
-        val = value
-        for i in range(3):
-            selection = []
+        print(volume)
+        alloy_value = value / volume
+        alloy = Alloy()
 
-            # approximate main metal and volume
-            for metal in main_metals:
-                selection.append(self.partial_alloy(metal, vol, 1, val))
-
-            selection = sorted(selection)
-            alloy.append(selection[-1])
-            vol *= (1 - alloy[i][2])
-            val -= alloy[i][0]
-
-        # to absolute percentages
-        alloy[1][2] = (1 - alloy[0][2]) * alloy[1][2]
-        alloy[2][2] = (1 - alloy[0][2] - alloy[1][2]) * alloy[2][2]
-
-        # volumetric alloy ...
-        volume_alloy = {
-            alloy[0][1]: round(alloy[0][2], 2),
-            alloy[1][1]: round(alloy[1][2], 2),
-            alloy[2][1]: round(alloy[2][2], 2),
-        }
-        residual = 1
-        for v in volume_alloy.values(): residual -= v
-        volume_alloy[random.choice(filler)] = residual
-
-        # ... needs to be converted into a mass based alloy ...
-        total_mass = 0
-        for metal, percentage in volume_alloy.items():
-            density = data.Metals.DATA[metal][1]
-            total_mass += percentage * volume * density
-
-        alloy = {}
-        for metal, percentage in volume_alloy.items():
-            density = data.Metals.DATA[metal][1]
-            mass = percentage * volume * density
-            percentage = round(mass/total_mass, 2)
-            alloy[metal] = percentage
-
-        return alloy
+        selection = list(set([random.randint(0, 3) for i in range(3)]))
+        for i in selection: alloy.selector_add(i)
+        elements = random.randint(2, 4)
+        try:
+            alloy.generate_from_value_cm3(alloy_value, elements)
+        except ValueError as e:
+            print(e)
+        return alloy.alloy
 
     def random_shape(self):
         """ generate a random coin based on some constraints ... """
@@ -469,4 +428,3 @@ class CoinGenerator(tk.Frame):
             return
 
         self.coins[number]["value"] = value
-
