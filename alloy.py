@@ -1,4 +1,5 @@
 import random
+from lxml import etree as et
 
 from data import Metals
 
@@ -6,12 +7,11 @@ from data import Metals
 class Alloy(object):
     """ This class handles alloys ... """
 
-    metals = Metals.DATA
-    selector = []
-    alloy = {}
-
     def __init__(self):
-        pass
+        self.alloy = {k: 0 for k in Metals.DATA}
+        self.selector = []
+        self.name = ""
+        self.description = ""
 
     def selector_add(self, group):
         """ add a selector group to the selector """
@@ -24,6 +24,48 @@ class Alloy(object):
 
         remove = Metals.SELECTOR.get(group)
         self.selector = [m for m in self.selector if m not in remove]
+
+    def random_generation(self):
+        # this will be the resulting alloy dict
+        alloy = {}
+
+        # selection lists for common metals, roughly sorted into three value groups
+        high = ["Au", "Au", "Au", "Au", "Au", "Pt", "Pt", "Pd"]
+        medium =["Ag", "Ag", "Ag", "Ag", "Ti"]
+        low = ["Cu", "Cu", "Cu", "Fe", "Fe", "Al", "Sn", "Zn"]
+
+        # creating the percentages for (up to three) metals in the alloy
+        primary = min(random.randint(50, 105), 100)
+        secondary = min(random.randint(0, 40), 100-primary)
+        tertiary = max(0, 100-primary-secondary)
+        parts = [primary, secondary, tertiary]
+        parts = sorted([x for x in parts], reverse=True)
+
+        # selecting three metal groups to smelt the alloy
+        variants = [
+            (high, high, high),
+            (high, high, medium),
+            (high, medium, medium),
+            (medium, medium, high),
+            (medium, medium, low),
+            (medium, low, low),
+            (low, low, medium),
+            (low, low, low),
+            (medium, low, low),
+            (low, low, medium),
+            (low, low, low)
+        ]
+        variant = random.choice(variants)
+
+        # creating the alloy ...
+        for amount, metals in zip(parts, variant):
+            metal = random.choice(metals)
+            amount = round(amount / 100, 2)
+            if not amount: continue
+            if alloy.get(metal): alloy[metal] += amount
+            else: alloy[metal] = amount
+
+        self.alloy = alloy
 
     def generate_from_value_cm3(self, value, elements=2):
         """ generate an alloy with a specific volumetric value
@@ -96,7 +138,6 @@ class Alloy(object):
 
         self.alloy = transformed_alloy
 
-
     def generate_from_density(self, density, elements=2):
         """ generate an alloy with a target density
         Args:
@@ -107,7 +148,7 @@ class Alloy(object):
         # sort elements into groups with higher and lower density than the target
         lower = []
         higher = []
-        for metal, data in self.metals.items():
+        for metal, data in Metals.DATA.items():
             if metal not in self.selector: continue
             if data[1] > density: higher.append((metal, data[1]))
             else: lower.append((metal, data[1]))
@@ -158,6 +199,46 @@ class Alloy(object):
             alloy[element[0]] = element[1] * high_percent / 100
 
         self.alloy = alloy
+
+    def load_from_xml(self, filename):
+        xml = et.parse(filename)
+        name = xml.find("name").text
+        desc = xml.find("description").text
+
+    def save_to_xml(self, filename):
+        """ write the current alloy as xml file
+        Args:
+            filename (str): the intended output filename
+
+        Returns:
+            bool: True if successfully written ...
+        """
+
+        if not filename: return False
+
+        alloy_tag = et.Element("alloy")
+        name_tag = et.SubElement(alloy_tag, "name")
+        name_tag.text = self.name
+        desc_tag = et.SubElement(alloy_tag, "description")
+        desc_tag.text = self.description
+
+        for k, v in self.alloy.items():
+            # only store active elements
+            if not v: continue
+
+            et.SubElement(
+                alloy_tag,
+                "metal",
+                attrib={"sym": k, "part": str(v)}
+            )
+
+        tree = et.ElementTree(alloy_tag)
+        try:
+            tree.write(filename, xml_declaration=True, pretty_print=True, encoding='UTF-8')
+        except:
+            return False
+
+        return True
 
     def __str__(self):
         return str(self.alloy)
