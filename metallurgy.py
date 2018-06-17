@@ -2,7 +2,7 @@ import tkinter as tk
 import tkinter.filedialog as tkfd
 from lxml import etree as et
 import data
-
+from alloy import Alloy
 
 S = data.DE
 
@@ -13,7 +13,7 @@ class Metallurgy(tk.Frame):
 
         self.widgets = {}
 
-        self.alloy = {k: 0 for k in data.Metals.DATA}
+        self.alloy = Alloy()
         self.alloy_value = 0
         self.alloy_density = 0
 
@@ -95,38 +95,38 @@ class Metallurgy(tk.Frame):
             sliders[m].bind("<B1-Motion>", lambda e, m=m: self.update_slider(e, m))
             sliders[m].bind("<ButtonRelease-1>", lambda e, m=m: self.force_update(e, m))
             sliders[m].grid(row=i, column=1, sticky=tk.EW)
-            text = str(round(self.alloy[m]*100, 2)) + " %"
+            text = str(round(self.alloy.alloy[m]*100, 2)) + " %"
             value[m] = tk.Label(self.smelting_pot, text=text, width=7, anchor=tk.E)
             value[m].grid(row=i, column=2)
 
 
     def update_slider(self, event, metal):
-        old_value = self.alloy[metal]
-        cur_value = self.alloy[metal] = event.widget.get()
+        old_value = self.alloy.alloy[metal]
+        cur_value = self.alloy.alloy[metal] = event.widget.get()
         diff = cur_value - old_value
 
-        active = {k: v for k, v in self.alloy.items() if k != metal and v > 0}
+        active = {k: v for k, v in self.alloy.alloy.items() if k != metal and v > 0}
         total = sum(v for v in active.values())
         for k, v in active.items():
-            self.alloy[k] += -diff * v / total
-            self.widgets["metal_slider"][k].set(self.alloy[k])
+            self.alloy.alloy[k] += -diff * v / total
+            self.widgets["metal_slider"][k].set(self.alloy.alloy[k])
 
-            text = str(abs(round(100*self.alloy[k], 2))) + " %"
+            text = str(abs(round(100*self.alloy.alloy[k], 2))) + " %"
             self.widgets["metal_relative"][k].config(text=text)
 
-        text = str(round(100*self.alloy[metal], 2)) + " %"
+        text = str(round(100*self.alloy.alloy[metal], 2)) + " %"
         self.widgets["metal_relative"][metal].config(text=text)
 
         if len(active) == 0:
-            self.alloy[metal] = 1
+            self.alloy.alloy[metal] = 1
             self.widgets["metal_slider"][metal].set(1)
 
         self.smelt()
 
     def force_update(self, event, metal):
         """ force update after release ... """
-        event.widget.set(self.alloy[metal])
-        text = str(round(100*self.alloy[metal], 2)) + " %"
+        event.widget.set(self.alloy.alloy[metal])
+        text = str(round(100*self.alloy.alloy[metal], 2)) + " %"
         self.widgets["metal_relative"][metal].config(text=text)
 
     def smelt(self):
@@ -136,7 +136,7 @@ class Metallurgy(tk.Frame):
         price = 0
 
         # calculate mass percentage
-        for name, value in self.alloy.items():
+        for name, value in self.alloy.alloy.items():
 
             # adding to price
             price += value / 1000 * data.Metals.DATA[name][2]
@@ -176,7 +176,7 @@ class Metallurgy(tk.Frame):
             l = sorted(l, key=lambda d: d[1], reverse=True)
 
         elif n == "amount":
-            l = [(m, self.alloy[m]) for m in selection]
+            l = [(m, self.alloy.alloy[m]) for m in selection]
             l = sorted(l, key=lambda d: d[1], reverse=True)
 
         elif n == "value":
@@ -242,7 +242,7 @@ class Metallurgy(tk.Frame):
         desc_tag = et.SubElement(alloy, "description")
         desc_tag.text = desc
 
-        for k, v in self.alloy.items():
+        for k, v in self.alloy.alloy.items():
             # only store active elements
             if not v: continue
 
@@ -299,7 +299,7 @@ class MetallurgyWindow(tk.Toplevel):
     def destroy(self, mode="save"):
         """ destroy the toplevel window and write the alloy back to the app """
 
-        alloy = {k: v for k, v in self.main_frame.alloy.items() if v}
+        alloy = self.main_frame.alloy
         if mode == "remove": alloy = None
 
         # writing app coin data ...
@@ -309,7 +309,7 @@ class MetallurgyWindow(tk.Toplevel):
         # updating the button ...
         text = ""
         if alloy:
-            short_alloy = [(v, k) for k, v in alloy.items() if v]
+            short_alloy = [(v, k) for k, v in alloy.alloy.items() if v]
             short_alloy = sorted(short_alloy, reverse=True)
 
             for entry in short_alloy:

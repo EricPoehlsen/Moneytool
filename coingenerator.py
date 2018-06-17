@@ -187,7 +187,7 @@ class CoinGenerator(tk.Frame):
 
                 # update text ...
                 text = ""
-                alloy_list = [(v, k) for k, v in alloy.items()]
+                alloy_list = [(v, k) for k, v in alloy.alloy.items()]
                 alloy_list = sorted(alloy_list, reverse=True)
                 for entry in alloy_list:
                     v, k = entry
@@ -202,11 +202,13 @@ class CoinGenerator(tk.Frame):
             # should we end up here, it is the random run ... just make some alloy
             if not alloy:
                 # generate random alloy
-                alloy = coin["alloy"] = self.random_alloy()
+                alloy = Alloy()
+                alloy.random_generation()
+                alloy = coin["alloy"] = alloy
 
                 # update text ...
                 text = ""
-                alloy_list = [(v, k) for k, v in alloy.items()]
+                alloy_list = [(v, k) for k, v in alloy.alloy.items()]
                 alloy_list = sorted(alloy_list, reverse=True)
                 for entry in alloy_list:
                     v, k = entry
@@ -234,7 +236,7 @@ class CoinGenerator(tk.Frame):
         price = 0
 
         # calculate mass percentage
-        for name, value in alloy.items():
+        for name, value in alloy.alloy.items():
 
             # adding to price
             price += value / 1000 * data.Metals.DATA[name][2]
@@ -254,9 +256,18 @@ class CoinGenerator(tk.Frame):
         return coin_value
 
     def calculate_shape(self, value, alloy):
+        """ Calculate a shape that creates a coin with a given value and alloy
+        Args:
+            value (float): the monetary value of the coin
+            alloy (Alloy): an alloy object
+        Returns:
+            Coin: a coin object with corresponding volume
+
+        """
+
         density = 0
         metal_value = 0
-        for metal, percentage in alloy.items():
+        for metal, percentage in alloy.alloy.items():
             density += percentage * data.Metals.DATA[metal][1]
             metal_value += percentage * data.Metals.DATA[metal][2] / 1000
 
@@ -270,37 +281,17 @@ class CoinGenerator(tk.Frame):
         coin.generate_shape(volume)
         return coin
 
-    @staticmethod
-    def partial_alloy(metal, volume, percentage, target_value):
-        """ iteration to find the volume percentage of a metal closest to the price
-        Args:
-            metal (str): Element Symbol of metal
-            volume (float): total volume of of coin in cm³
-            percentage (float): starting volume percentage 0.0 => 1.0
-            target_value(float): monetary value this percentage should yield
-
-        Returns: (price (int), metal (str), price (float))
-        """
-
-        metal_value = data.Metals.DATA[metal][2] / 1000
-        density = data.Metals.DATA[metal][1]
-        within_price_range = False
-        price = 0
-        while not within_price_range:
-            percentage -= .01
-            mass = percentage * volume * density
-            price = mass * metal_value
-            if price < target_value: within_price_range = True
-            if percentage <= 0: break
-
-        return [price, metal, percentage]
-
     def calculate_alloy(self, shape, value):
-        """ create an alloy based on a target coin value and shape """
+        """ create an alloy which completes a coin with given shape and value
+        Args:
+            shape (Coin): a coin shape object
+            value (float): monetary value of the given coin
+        Returns:
+            Alloy: an alloy that complements shape and value of the given coin
+        """
 
         volume = shape.volume / 1000
 
-        print(volume)
         alloy_value = value / volume
         alloy = Alloy()
 
@@ -311,94 +302,33 @@ class CoinGenerator(tk.Frame):
             alloy.generate_from_value_cm3(alloy_value, elements)
         except ValueError as e:
             print(e)
-        return alloy.alloy
+        return alloy
 
     def random_shape(self):
         """ generate a random coin based on some constraints ... """
 
+        volume = random.choice([
+            random.random() * 6,
+            random.random() * 3,
+            random.random() * 1,
+        ]) + 1
+
         shape_select = random.randint(0, 100)
-        if 0 <= shape_select <= 60: shape = "round"
-        elif shape_select <= 80: shape = "rect"
-        else: shape = "poly"
+        if 0 <= shape_select <= 60: x = "round"
+        elif shape_select <= 80: x = "rect"
+        else: x = "poly"
 
-        # creating random data for the shape ...
-        radius = round(5 + random.random() * 15, 2)
-        inner_radius = max(0, round((random.random() - 0.3) * radius, 2))
-        sides = random.choice([3,4,4,5,5,5,6,6,6,6,7,8,8])
-        thickness = round(sum([random.random() for i in range(4)]), 2)
-        chamfer = max(0, round(random.random() * 0.66 - 0.33, 2))
+        shapes = {
+            "round": CircleCoin,
+            "rect": RectCoin,
+            "poly": PolyCoin
+        }
 
-        if shape == "round":
-            coin = CircleCoin(
-                radius,
-                thickness,
-                inner_radius
-            )
-        elif shape == "rect":
-            length = round(radius * (1 + random.random()), 2)
-            width = round(radius * (1 + random.random()), 2)
-            corner_radius = min([length/2-1, width/2-1, inner_radius])
+        coin = shapes[x]()
 
-            coin = RectCoin(
-                length=length,
-                width=width,
-                thickness=thickness,
-                corner_radius=corner_radius
-            )
-        else:
-            coin = PolyCoin(
-                sides,
-                radius,
-                thickness,
-                chamfer
-            )
-
+        coin.generate_shape(volume)
         coin.calculate_shape()
         return coin
-
-    def random_alloy(self):
-        """ generating a mostly random alloy using some constraints"""
-
-        # this will be the resulting alloy dict
-        alloy = {}
-
-        # selection lists for common metals, roughly sorted into three value groups
-        high = ["Au", "Au", "Au", "Au", "Au", "Pt", "Pt", "Pd"]
-        medium =["Ag", "Ag", "Ag", "Ag", "Ti"]
-        low = ["Cu", "Cu", "Cu", "Fe", "Fe", "Al", "Sn", "Zn"]
-
-        # creating the percentages for (up to three) metals in the alloy
-        primary = min(random.randint(50, 105), 100)
-        secondary = min(random.randint(0, 40), 100-primary)
-        tertiary = max(0, 100-primary-secondary)
-        parts = [primary, secondary, tertiary]
-        parts = sorted([x for x in parts], reverse=True)
-
-        # selecting three metal groups to smelt the alloy
-        variants = [
-            (high, high, high),
-            (high, high, medium),
-            (high, medium, medium),
-            (medium, medium, high),
-            (medium, medium, low),
-            (medium, low, low),
-            (low, low, medium),
-            (low, low, low),
-            (medium, low, low),
-            (low, low, medium),
-            (low, low, low)
-        ]
-        variant = random.choice(variants)
-
-        # creating the alloy ...
-        for amount, metals in zip(parts, variant):
-            metal = random.choice(metals)
-            amount = round(amount / 100, 2)
-            if not amount: continue
-            if alloy.get(metal): alloy[metal] += amount
-            else: alloy[metal] = amount
-
-        return alloy
 
     def select_alloy(self, number):
         """ Display the metallurgy window for a given coin
