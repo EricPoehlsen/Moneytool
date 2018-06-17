@@ -60,7 +60,8 @@ class RectCoin(Coin):
         area = min([random.random() * (max_area / i) for i in range(1, 5)])
 
         # calculating sides
-        length = max(random.random() * sqrt(area), 2)
+        square_side = sqrt(area)
+        length = square_side + (random.random() - 0.5) * square_side
         width = area / length
 
         # generating border radius
