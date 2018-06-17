@@ -185,20 +185,6 @@ class CoinGenerator(tk.Frame):
             if shape and value and not alloy:
                 alloy = coin["alloy"] = self.calculate_alloy(shape, value)
 
-                # update text ...
-                text = ""
-                alloy_list = [(v, k) for k, v in alloy.alloy.items()]
-                alloy_list = sorted(alloy_list, reverse=True)
-                for entry in alloy_list:
-                    v, k = entry
-                    text += k + ": " + str(round(v * 100, 2)) + "% - "
-
-                if text: text = text[:-3]
-                button = widgets[2]
-                button.config(text=text)
-
-                continue
-
             # should we end up here, it is the random run ... just make some alloy
             if not alloy:
                 # generate random alloy
@@ -206,17 +192,17 @@ class CoinGenerator(tk.Frame):
                 alloy.random_generation()
                 alloy = coin["alloy"] = alloy
 
-                # update text ...
-                text = ""
-                alloy_list = [(v, k) for k, v in alloy.alloy.items()]
-                alloy_list = sorted(alloy_list, reverse=True)
-                for entry in alloy_list:
-                    v, k = entry
-                    text += k + ": " + str(round(v * 100, 2)) + "% - "
+            # update text ...
+            text = ""
+            alloy_list = [(v, k) for k, v in alloy.alloy.items()]
+            alloy_list = sorted(alloy_list, reverse=True)
+            for entry in alloy_list:
+                v, k = entry
+                text += k + ": " + str(round(v * 100, 2)) + "% - "
 
-                if text: text = text[:-3]
-                button = widgets[2]
-                button.config(text=text)
+            if text: text = text[:-3]
+            button = widgets[2]
+            button.config(text=text)
 
     def generate(self):
         """ calculate missing values for all coins """
@@ -276,7 +262,7 @@ class CoinGenerator(tk.Frame):
         C = CircleCoin
         R = RectCoin
         P = PolyCoin
-        selection = [C(1,1), C(1,1), C(1,1), R(1,1,1), P(1,1,1)]
+        selection = [C(), C(), C(), R(), P()]
         coin = random.choice(selection)
         coin.generate_shape(volume)
         return coin
@@ -307,25 +293,21 @@ class CoinGenerator(tk.Frame):
     def random_shape(self):
         """ generate a random coin based on some constraints ... """
 
+        # coin volume 0.1 - 6.1 cm³
         volume = random.choice([
             random.random() * 6,
             random.random() * 3,
-            random.random() * 1,
-        ]) + 1
+            random.random() * 2,
+        ]) + .1
 
-        shape_select = random.randint(0, 100)
-        if 0 <= shape_select <= 60: x = "round"
-        elif shape_select <= 80: x = "rect"
-        else: x = "poly"
+        # shape 60% circle. 20% rect, 20% poly
+        C = CircleCoin
+        R = RectCoin
+        P = PolyCoin
+        c = random.choice([C, C, C, R, P])
 
-        shapes = {
-            "round": CircleCoin,
-            "rect": RectCoin,
-            "poly": PolyCoin
-        }
-
-        coin = shapes[x]()
-
+        # build and return coin
+        coin = c()
         coin.generate_shape(volume)
         coin.calculate_shape()
         return coin
