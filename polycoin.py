@@ -102,7 +102,7 @@ class PolyCoin(Coin):
         area = min([random.random() * (max_area / i) for i in range(1, 5)])
 
         radius = sqrt(area / pi)
-        chamfer = min(.5 * random.random() - random.random(), 0)
+        chamfer = max(.5 * random.random() - random.random(), 0)
         sides = random.choice([3,3,4,5,6,6,6,6,7,8,8])
 
         # initial trigonometry ...
